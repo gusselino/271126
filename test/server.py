@@ -18,9 +18,9 @@ PIN = "1234"
 
 def ny():
     return {
-        "solo1111": {"namn": "Test Solo", "platser": 1, "sparrad": False, "ja": None, "inne": 0, "senast": None},
-        "plus1111": {"namn": "Test Pluset", "platser": 2, "sparrad": False, "ja": None, "inne": 0, "senast": None},
-        "plus2222": {"namn": "Test Plustvå", "platser": 3, "sparrad": False, "ja": None, "inne": 0, "senast": None},
+        "solo1111": {"namn": "Anna Test", "platser": 1, "sparrad": False, "ja": None, "inne": 0, "senast": None},
+        "plus1111": {"namn": "Erik Test", "platser": 2, "sparrad": False, "ja": None, "inne": 0, "senast": None},
+        "plus2222": {"namn": "Maja Test", "platser": 3, "sparrad": False, "ja": None, "inne": 0, "senast": None},
         "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "ja": None, "inne": 0, "senast": None},
     }
 

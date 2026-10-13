@@ -12,10 +12,11 @@
 <main id="m"></main>
 <script src="qrcode.js"></script>
 <script src="app.js"></script>
+<script src="karta.js"></script>
 <script>
 const m = document.getElementById('m');
 const kod = (location.search.slice(1).split('&')[0] || location.hash.slice(1)).toLowerCase().replace(/[^a-z0-9]/g, '');
-const KODEN = '271126';
+const ALDER = 25;   // svaret på säkerhetsfrågan
 let lank = null, sprak = null, snabbt = false, klocka = null;
 try { sprak = localStorage.getItem('sprak'); } catch (e) {}
 
@@ -23,11 +24,14 @@ const T = {
   sv: {
     ansluter: 'ansluter till 271126 ...', ok: 'ok',
     ingen: 'ingen inbjudan hittades.', stangt: 'stängt.', kontakt: 'ingen kontakt. ladda om sidan.',
-    identitet: 'identitet', status: 'status', bjuden: 'BJUDEN', platser: 'platser',
-    du: n => n === 1 ? '1 (bara du)' : `${n} (du + ${n - 1})`,
+    identitet: 'identitet', status: 'status', bjuden: 'BJUDEN', sallskap: 'sällskap',
+    plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'personer'}`,
+    fest: 'du är bjuden på fest fredag 27 november.', forst: 'kolla att du kan komma innan du hämtar biljetten.',
+    steg: ['1. läs igenom', '2. svara på säkerhetsfrågan', '3. spara biljetten. den visas i dörren.'],
+    aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.', ratt: 'RÄTT.', kartor: '[öppna i kartor]',
     dag: 'fredag 27 november 2026', dorr: 'dörrarna öppnar',
-    krav: 'ange kod för att tacka ja', ledtrad: 'ledtråd: datumet', kodrad: 'kod', fel: 'FEL KOD. försök igen.',
-    godkand: 'KOD GODKÄND', skriver: 'skriver ut biljett', biljett: 'BILJETT',
+    krav: 'säkerhetsfråga: hur gammal blir gustav?', kodrad: 'svar',
+    skriver: 'skriver ut biljett', biljett: 'BILJETT',
     pers: n => n === 1 ? '1 PERSON' : `${n} PERSONER`,
     galler: n => n === 1 ? 'gäller bara dig.' : `gäller dig och ${['', 'en', 'två', 'tre', 'fyra', 'fem'][n - 1] || n - 1} till.`,
     samma: 'ni visar samma kod i dörren.', skarm: 'kommer ni inte samtidigt? skicka en skärmbild av koden.',
@@ -36,11 +40,14 @@ const T = {
   en: {
     ansluter: 'connecting to 271126 ...', ok: 'ok',
     ingen: 'no invitation found.', stangt: 'closed.', kontakt: 'no connection. reload the page.',
-    identitet: 'identity', status: 'status', bjuden: 'INVITED', platser: 'seats',
-    du: n => n === 1 ? '1 (just you)' : `${n} (you + ${n - 1})`,
+    identitet: 'identity', status: 'status', bjuden: 'INVITED', sallskap: 'guests',
+    plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'people'}`,
+    fest: 'you are invited to a party on friday 27 november.', forst: 'make sure you can come before you get your ticket.',
+    steg: ['1. read this', '2. answer the security question', '3. save your ticket. you show it at the door.'],
+    aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.', ratt: 'CORRECT.', kartor: '[open in maps]',
     dag: 'friday 27 november 2026', dorr: 'doors open',
-    krav: 'enter code to accept', ledtrad: 'hint: the date', kodrad: 'code', fel: 'WRONG CODE. try again.',
-    godkand: 'CODE ACCEPTED', skriver: 'printing ticket', biljett: 'TICKET',
+    krav: 'security question: how old is gustav turning?', kodrad: 'answer',
+    skriver: 'printing ticket', biljett: 'TICKET',
     pers: n => n === 1 ? '1 PERSON' : `${n} PEOPLE`,
     galler: n => n === 1 ? 'valid for you only.' : `valid for you and ${['', 'one', 'two', 'three', 'four', 'five'][n - 1] || n - 1} more.`,
     samma: 'you all show the same code at the door.', skarm: 'not arriving together? send them a screenshot of the code.',
@@ -73,9 +80,16 @@ function nedrakning() {
 const akt = vad => vad === 'Dörrarna öppnar' ? t().dorr : vad.toUpperCase();
 
 async function program() {
-  await skriv('  ' + t().dag);
   for (const [tid, vad] of FEST.program) await skriv(`  ${tid}  ${akt(vad)}`);
   await skriv(`  ${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`);
+}
+
+function karta() {
+  const k = el('div', { class: 'karta' });
+  k.innerHTML = KARTA;   // fast teckning ur karta.js, inget som kommer utifrån
+  k.append(el('a', { href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(FEST.adress + ', ' + FEST.plats), target: '_blank', rel: 'noopener' }, t().kartor),
+           el('span', { class: 'svag' }, ' © OpenStreetMap'));
+  return k;
 }
 
 // ---- steg 0: språk
@@ -95,12 +109,16 @@ function valjSprak() {
 async function inbjudan() {
   await skriv(`> ${t().identitet}: ${lank.namn.toUpperCase()}`);
   await skriv(`> ${t().status}: ${t().bjuden}`, 'stark');
-  await skriv(`> ${t().platser}: ${t().du(lank.platser)}`);
+  if (lank.platser > 1) await skriv(`> ${t().sallskap}: ${t().plus(lank.platser)}`);
   tom();
+  await skriv('> ' + t().fest);
   await program();
+  m.append(karta()); botten(); await vila(400);
   tom();
-  await skriv(`> ${t().krav}`);
-  await skriv(`  ${t().ledtrad}`, 'svag');
+  await skriv('> ' + t().forst);
+  for (const rad of t().steg) await skriv('  ' + rad);
+  tom();
+  await skriv('> ' + t().krav);
   await kodlas();
 }
 
@@ -109,15 +127,15 @@ function kodlas() {
     let v = '', last = false;
     const visning = el('div', { class: 'l kod' });
     const fel = el('div', { class: 'l fel' }, ' ');
-    const rita = () => { visning.textContent = `  ${t().kodrad}: ${v.padEnd(6, '_').split('').join(' ')}`; };
+    const rita = () => { visning.textContent = `  ${t().kodrad}: ${v.padEnd(2, '_').split('').join(' ')}`; };
     const tryck = n => {
       if (last) return;
       if (n === '<') { v = v.slice(0, -1); return rita(); }
-      if (v.length >= 6) return;
+      if (v.length >= 2) return;
       v += n; rita(); fel.textContent = ' ';
       if (navigator.vibrate) navigator.vibrate(10);
-      if (v.length < 6) return;
-      if (v !== KODEN) { fel.textContent = '> ' + t().fel; v = ''; return setTimeout(rita, 350); }
+      if (v.length < 2) return;
+      if (Number(v) !== ALDER) { fel.textContent = '> ' + (Number(v) < ALDER ? t().aldre : t().yngre); v = ''; return setTimeout(rita, 450); }
       last = true; document.removeEventListener('keydown', tangent);
       knappar.remove(); fel.remove();
       klar();
@@ -134,7 +152,7 @@ function kodlas() {
 
 async function tackaJa() {
   snabbt = false;
-  await skriv('> ' + t().godkand, 'stark');
+  await skriv('> ' + t().ratt, 'stark');
   const rad = await skriv(`> ${t().skriver} [          ]   0%`);
   const svar = skicka({ a: 'ja', k: kod });
   for (let i = 1; i <= 10; i++) { await vila(90); rad.textContent = `> ${t().skriver} [${'#'.repeat(i)}${' '.repeat(10 - i)}] ${String(i * 10).padStart(3)}%`; }
@@ -154,7 +172,7 @@ function biljett() {
     el('div', { class: 'l topp' }, el('span', {}, `271126 // ${t().biljett}`), el('button', { onclick: byt }, sprak === 'en' ? '[sv]' : '[en]')),
     el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + kod)),
     el('div', { class: 'l stor' }, t().pers(n)),
-    el('div', { class: 'l' }, `> ${lank.namn.toUpperCase()}`),
+    el('div', { class: 'l' }, `> ${lank.namn.toUpperCase()}${n > 1 ? ' ' + t().plus(n).toUpperCase() : ''}`),
     el('div', { class: 'l' }, '> ' + t().galler(n)),
     ...(n > 1 ? [el('div', { class: 'l' }, '> ' + t().samma), el('div', { class: 'l' }, '> ' + t().skarm)] : []),
     el('div', { class: 'l' }, ' '),
@@ -162,6 +180,7 @@ function biljett() {
     ...FEST.program.map(([tid, vad]) => el('div', { class: 'l' }, `  ${tid}  ${akt(vad)}`)),
     el('div', { class: 'l' }, `  ${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`),
     ned,
+    karta(),
     el('div', { class: 'l' }, ' '),
     el('div', { class: 'l' }, '> ' + t().kladsel, el('span', { class: 'mark' })));
   window.scrollTo(0, 0);
