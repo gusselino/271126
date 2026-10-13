@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Lokal testserver: serverar site/ och härmar Apps Script-baksidan på /api.
+"""Lokal testserver: serverar docs/ och härmar Apps Script-baksidan på /api.
 
 Samma regler som apps-script/Code.gs, med data i minnet. Vaktens kod är 1234.
-Testlänkar: ?solo11 (1 plats), ?plus11 (2 platser), ?plus22 (3 platser), ?sparr1 (spärrad).
+Testlänkar: ?solo1111 (1 plats), ?plus1111 (2 platser), ?plus2222 (3 platser), ?sparr111 (spärrad).
 """
 import json
-import random
-import re
 import sys
 import threading
 from datetime import datetime
@@ -14,70 +12,78 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-SITE = Path(__file__).resolve().parent.parent / "site"
+SITE = Path(__file__).resolve().parent.parent / "docs"
 PIN = "1234"
-LANKAR = {
-    "solo11": {"namn": "Test Solo", "platser": 1, "sparrad": False},
-    "plus11": {"namn": "Test Plus Ett", "platser": 2, "sparrad": False},
-    "plus22": {"namn": "Test Plus Två", "platser": 3, "sparrad": False},
-    "sparr1": {"namn": "Test Spärrad", "platser": 1, "sparrad": True},
-}
-BILJETTER = []  # {id, kod, namn, inne}
+
+
+def ny():
+    return {
+        "solo1111": {"namn": "Test Solo", "platser": 1, "sparrad": False, "ja": None, "inne": 0, "senast": None},
+        "plus1111": {"namn": "Test Pluset", "platser": 2, "sparrad": False, "ja": None, "inne": 0, "senast": None},
+        "plus2222": {"namn": "Test Plustvå", "platser": 3, "sparrad": False, "ja": None, "inne": 0, "senast": None},
+        "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "ja": None, "inne": 0, "senast": None},
+    }
+
+
+LANKAR = ny()
 LAS = threading.Lock()
-TECKEN = "abcdefghjkmnpqrstuvwxyz23456789"
 
 
-def stada(n):
-    return re.sub(r"\s+", " ", re.sub(r"[<>]", "", str(n or ""))).strip()[:40]
+def rakna():
+    return {"inne": sum(l["inne"] for l in LANKAR.values()),
+            "totalt": sum(l["platser"] for l in LANKAR.values() if l["ja"] and not l["sparrad"])}
 
 
 def visa(kod):
     l = LANKAR.get(kod)
-    if not l:
+    if not l or l["sparrad"]:
         return {"ok": False, "fel": "okänd"}
-    if l["sparrad"]:
-        return {"ok": False, "fel": "spärrad"}
-    b = [{"id": x["id"], "namn": x["namn"]} for x in BILJETTER if x["kod"] == kod]
-    return {"ok": True, "platser": l["platser"], "biljetter": b, "kvar": max(0, l["platser"] - len(b))}
+    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "ja": bool(l["ja"])}
 
 
-def ta(kod, namn):
-    namn = stada(namn)
-    if len(namn) < 2:
-        return {"ok": False, "fel": "namn"}
+def tacka_ja(kod):
     with LAS:
         l = LANKAR.get(kod)
-        if not l:
+        if not l or l["sparrad"]:
             return {"ok": False, "fel": "okänd"}
-        if l["sparrad"]:
-            return {"ok": False, "fel": "spärrad"}
-        if len([x for x in BILJETTER if x["kod"] == kod]) >= l["platser"]:
-            return {"ok": False, "fel": "fullt"}
-        bid = "".join(random.choice(TECKEN) for _ in range(10))
-        BILJETTER.append({"id": bid, "kod": kod, "namn": namn, "inne": None})
-        return {"ok": True, "biljett": {"id": bid, "namn": namn}}
+        l["ja"] = l["ja"] or datetime.now().isoformat()
+        return {"ok": True, "namn": l["namn"], "platser": l["platser"], "ja": True}
 
 
-def slapp_in(bid, pin):
+def slapp_in(kod, pin, antal):
     if str(pin) != PIN:
         return {"ok": False, "fel": "pin"}
     with LAS:
-        inne = len([x for x in BILJETTER if x["inne"]])
-        b = next((x for x in BILJETTER if x["id"] == bid), None)
-        if not b:
-            return {"ok": False, "fel": "okänd", "inne": inne, "totalt": len(BILJETTER)}
-        if LANKAR[b["kod"]]["sparrad"]:
-            return {"ok": False, "fel": "spärrad", "namn": b["namn"], "inne": inne, "totalt": len(BILJETTER)}
-        if b["inne"]:
-            return {"ok": False, "fel": "använd", "namn": b["namn"], "tid": b["inne"], "inne": inne, "totalt": len(BILJETTER)}
-        b["inne"] = datetime.now().strftime("%H:%M")
-        return {"ok": True, "namn": b["namn"], "via": LANKAR[b["kod"]]["namn"], "inne": inne + 1, "totalt": len(BILJETTER)}
+        l = LANKAR.get(kod)
+        r = rakna()
+        if not l:
+            return {"ok": False, "fel": "okänd", **r}
+        bas = {"namn": l["namn"], "platser": l["platser"], **r}
+        if l["sparrad"]:
+            return {"ok": False, "fel": "spärrad", **bas}
+        kvar = l["platser"] - l["inne"]
+        if kvar <= 0:
+            return {"ok": False, "fel": "använd", "tid": l["senast"] or "", **bas}
+        try:
+            n = float(antal or 0)
+        except (TypeError, ValueError):
+            n = 0
+        if not n and l["platser"] == 1:
+            n = 1
+        if not n:
+            return {"ok": True, "klar": False, "redan": l["inne"], "kvar": kvar, **bas}
+        if n < 1 or n > kvar or n != int(n):
+            return {"ok": False, "fel": "antal", "kvar": kvar, **bas}
+        n = int(n)
+        l["inne"] += n
+        l["senast"] = datetime.now().strftime("%H:%M")
+        return {"ok": True, "klar": True, "antal": n, "kvar": kvar - n, **bas, "inne": r["inne"] + n}
 
 
 def lage(pin):
     if str(pin) != PIN:
         return {"ok": False, "fel": "pin"}
-    return {"ok": True, "inne": len([x for x in BILJETTER if x["inne"]]), "totalt": len(BILJETTER)}
+    return {"ok": True, **rakna()}
 
 
 class H(SimpleHTTPRequestHandler):
@@ -92,21 +98,29 @@ class H(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def do_GET(self):
+        global LANKAR
         u = urlparse(self.path)
         if u.path == "/api":
             q = {k: v[0] for k, v in parse_qs(u.query).items()}
             return self._json(visa(q.get("k", "")) if q.get("a") == "l" else {"ok": False, "fel": "fråga"})
         if u.path == "/_data":
-            return self._json({"biljetter": BILJETTER})
+            return self._json(LANKAR)
+        if u.path == "/_nollstall":
+            LANKAR = ny()
+            return self._json({"ok": True})
         super().do_GET()
 
     def do_POST(self):
         p = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-        if p.get("a") == "ta":
-            return self._json(ta(str(p.get("k", "")), p.get("namn")))
+        if p.get("a") == "ja":
+            return self._json(tacka_ja(str(p.get("k", ""))))
         if p.get("a") == "in":
-            return self._json(slapp_in(str(p.get("b", "")), p.get("pin")))
+            return self._json(slapp_in(str(p.get("b", "")), p.get("pin"), p.get("antal")))
         if p.get("a") == "lage":
             return self._json(lage(p.get("pin")))
         self._json({"ok": False, "fel": "fråga"})

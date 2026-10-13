@@ -1,14 +1,15 @@
-// 271126 – gemensamt för gästsidan och vaktsidan.
+// 271126 – gemensamt för gästsidan och dörrsidan.
 
 // Adressen till Apps Script-webbappen. Lokalt (test) går allt mot /api.
 const API_SKARP = '';
 const API = ['localhost', '127.0.0.1'].includes(location.hostname) ? '/api' : API_SKARP;
 
-const TEXT = {
+const FEST = {
+  start: '2026-11-27T22:00:00+01:00',
   datum: 'Fredag 27 november',
-  tid: '',                       // t.ex. '23.00', lämnas tomt tills den är bestämd
+  program: [['22.00', 'Dörrarna öppnar'], ['23.00', 'Dygna'], ['00.00', 'Sonic Butler']],
   plats: 'Stockholm',
-  adress: 'Adress kommer samma dag.',
+  adress: 'Adressen kommer samma dag.',
   kladsel: 'Kom som dig själv.',
 };
 

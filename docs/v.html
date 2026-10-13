@@ -14,6 +14,7 @@
 <div id="topp"><span>271126 dörr</span><span id="antal">–</span></div>
 <div id="botten"><span id="lage" class="svag">Startar kameran …</span></div>
 <div id="svar"><div class="stor"></div><div class="vem"></div><div class="mer"></div></div>
+<div id="val"><div class="stor"></div><div class="vem"></div><div class="mer"></div><div class="knappar"></div></div>
 <div id="pin">
   <div class="nr">Dörr</div>
   <div class="block"><input id="pinfalt" inputmode="numeric" autocomplete="off" placeholder="Kod"><button id="pinknapp">Öppna</button><div class="fel" id="pinfel"></div></div>
@@ -23,14 +24,15 @@
 <script src="app.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-const svar = $('svar'), bild = $('bild'), duk = $('duk'), lage = $('lage');
+const svar = $('svar'), val = $('val'), bild = $('bild'), duk = $('duk'), lage = $('lage');
 let pin = '';
 try { pin = localStorage.getItem('pin') || ''; } catch (e) {}
 let upptagen = false, senast = '', senastTid = 0;
 
-function visaAntal(s) { if (s && s.totalt != null) $('antal').textContent = `${s.inne} inne / ${s.totalt}`; }
+function visaAntal(s) { if (s && s.totalt != null) $('antal').textContent = `${s.inne} inne / ${s.totalt} väntade`; }
 
 function visaSvar(ja, stor, vem, mer) {
+  val.className = '';
   svar.className = ja ? 'ja' : 'nej';
   svar.querySelector('.stor').textContent = stor;
   svar.querySelector('.vem').textContent = vem || '';
@@ -39,25 +41,42 @@ function visaSvar(ja, stor, vem, mer) {
   clearTimeout(visaSvar.t);
   visaSvar.t = setTimeout(stang, ja ? 2200 : 4500);
 }
-function stang() { svar.className = ''; upptagen = false; }
+function stang() { svar.className = ''; val.className = ''; upptagen = false; senastTid = Date.now(); lage.textContent = 'Sikta på biljetten'; }
 svar.addEventListener('click', stang);
 
-async function kontrollera(id) {
-  if (upptagen) return;
+const pers = n => n === 1 ? '1 person' : n + ' personer';
+
+// En biljett för flera: vakten väljer hur många som går in nu.
+function visaVal(id, s) {
+  val.className = 'pa';
+  val.querySelector('.stor').textContent = pers(s.kvar);
+  val.querySelector('.vem').textContent = s.namn;
+  val.querySelector('.mer').textContent = s.redan ? `${s.redan} av ${s.platser} är redan inne.` : `Biljetten gäller ${pers(s.platser)}.`;
+  const k = val.querySelector('.knappar');
+  k.replaceChildren(el('button', { class: 'alla', onclick: () => kontrollera(id, s.kvar) }, s.kvar === 1 ? 'Släpp in 1' : `Släpp in alla ${s.kvar}`));
+  for (let n = s.kvar - 1; n >= 1; n--) k.append(el('button', { onclick: () => kontrollera(id, n) }, `Bara ${n} nu`));
+  k.append(el('button', { class: 'tom', onclick: stang }, 'Avbryt'));
+}
+
+function tolka(id, s) {
+  visaAntal(s);
+  if (s.ok && s.klar) return visaSvar(true, s.antal > 1 ? s.antal + ' in' : 'Ok', s.namn, s.kvar > 0 ? `${s.kvar} kvar på biljetten.` : '');
+  if (s.ok) return visaVal(id, s);
+  if (s.fel === 'använd') return visaSvar(false, 'Redan inne', s.namn, (s.platser > 1 ? `Alla ${s.platser} är insläppta. ` : '') + (s.tid ? 'Senast ' + s.tid : ''));
+  if (s.fel === 'spärrad') return visaSvar(false, 'Spärrad', s.namn, '');
+  if (s.fel === 'pin') { upptagen = false; return fragaPin('Fel kod.'); }
+  visaSvar(false, 'Ogiltig', '', 'Biljetten finns inte.');
+}
+
+async function kontrollera(id, antal) {
+  if (upptagen && !antal) return;
   upptagen = true;
   lage.textContent = 'Kontrollerar …';
   try {
-    const s = await skicka({ a: 'in', b: id, pin });
-    visaAntal(s);
-    if (s.ok) visaSvar(true, 'Ok', s.namn, s.via ? 'Via ' + s.via : '');
-    else if (s.fel === 'använd') visaSvar(false, 'Redan inne', s.namn, 'Insläppt ' + s.tid);
-    else if (s.fel === 'spärrad') visaSvar(false, 'Spärrad', s.namn, '');
-    else if (s.fel === 'pin') { upptagen = false; fragaPin('Fel kod.'); }
-    else visaSvar(false, 'Ogiltig', '', 'Biljetten finns inte.');
+    tolka(id, await skicka({ a: 'in', b: id, pin, antal: antal || 0 }));
   } catch (e) {
     visaSvar(false, 'Ingen kontakt', '', 'Försök igen.');
   }
-  lage.textContent = 'Sikta på biljetten';
 }
 
 function idUr(text) {
@@ -74,8 +93,8 @@ function sok() {
     const kod = jsQR(g.getImageData(0, 0, duk.width, duk.height).data, duk.width, duk.height, { inversionAttempts: 'dontInvert' });
     if (kod && kod.data) {
       const id = idUr(kod.data), nu = Date.now();
-      // samma biljett som nyss visades läses inte om förrän efter fem sekunder
-      if (id && !(id === senast && nu - senastTid < 5000)) { senast = id; senastTid = nu; kontrollera(id); }
+      // samma biljett som nyss visades läses inte om förrän efter tre sekunder
+      if (id && !(id === senast && nu - senastTid < 3000)) { senast = id; senastTid = nu; kontrollera(id); }
     }
   }
   requestAnimationFrame(sok);
@@ -126,6 +145,7 @@ function borja() {
 }
 
 (async () => {
+  if (!API) { lage.textContent = 'Stängt.'; return; }
   if (!pin) return fragaPin();
   try {
     const s = await skicka({ a: 'lage', pin });

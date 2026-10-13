@@ -1,0 +1,58 @@
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#000;color:#e9e9e9;font:700 13px/1.35 "Helvetica Neue",Helvetica,Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+main{min-height:100%;max-width:440px;margin:0 auto;padding:28px 22px 34px;display:flex;flex-direction:column}
+.nr{font-size:74px;line-height:.86;letter-spacing:-.045em;margin-left:-4px;font-variant-numeric:tabular-nums}
+.rad{border-top:1px solid #e9e9e9;padding:10px 0 9px;display:flex;justify-content:space-between;gap:14px}
+.rad:last-child{border-bottom:1px solid #e9e9e9}
+.rad b{font-weight:700;font-variant-numeric:tabular-nums}
+.block{margin-top:26px}
+.svag{color:#777}
+.fyll{flex:1;min-height:34px}
+.stor{font-size:40px;line-height:.95;letter-spacing:-.03em;word-break:break-word}
+.mellan{font-size:22px;line-height:1.05;letter-spacing:-.01em;margin-top:10px}
+.qr{background:#fff;padding:6px;margin-top:22px}
+.qr svg{display:block;width:100%;height:auto}
+button{width:100%;background:#e9e9e9;color:#000;border:0;border-radius:0;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:16px 13px;
+  margin-top:10px;cursor:pointer;-webkit-appearance:none;touch-action:manipulation}
+button.tom{background:#000;color:#e9e9e9;border:1px solid #e9e9e9}
+input{width:100%;background:#000;color:#fff;border:1px solid #e9e9e9;border-radius:0;font:inherit;font-size:16px;letter-spacing:.1em;
+  text-transform:uppercase;padding:15px 13px;outline:none;-webkit-appearance:none}
+input::placeholder{color:#666}
+.fel{color:#ff3b30;margin-top:10px;min-height:1.35em}
+
+/* allt på gästsidan tänds rad för rad */
+.in>*{opacity:0;animation:tand .01s steps(1) forwards;animation-delay:calc(var(--i,0)*var(--steg,170ms))}
+@keyframes tand{to{opacity:1}}
+.in>.nr.flimmer{animation:flimmer 1.1s steps(1) forwards}
+@keyframes flimmer{0%,7%,13%,22%{opacity:0}4%,10%,18%,26%,100%{opacity:1}}
+
+/* håll-knappen */
+.hall{position:relative;overflow:hidden;background:#000;color:#e9e9e9;border:1px solid #e9e9e9;padding:22px 13px;user-select:none;-webkit-user-select:none;touch-action:none}
+.hall i{position:absolute;inset:0;background:#e9e9e9;transform:scaleX(0);transform-origin:left;transition:transform .18s linear}
+.hall.pa i{transform:scaleX(1);transition:transform var(--tid,1100ms) linear}
+.hall span{position:relative;mix-blend-mode:difference}
+#blixt{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20}
+#blixt.pa{animation:blixt .5s steps(1) 1}
+@keyframes blixt{0%,30%,60%{opacity:1}15%,45%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.in>*{animation-delay:0s!important}.in>.nr.flimmer{animation:none;opacity:1}#blixt.pa{animation:none}}
+
+/* dörren */
+body.vakt main{max-width:none;padding:0}
+#bild{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+#ram{position:fixed;left:50%;top:44%;width:64vmin;height:64vmin;transform:translate(-50%,-50%);border:2px solid #fff;pointer-events:none}
+#topp{position:fixed;left:0;right:0;top:0;padding:14px 16px;display:flex;justify-content:space-between;background:#000;z-index:3}
+#botten{position:fixed;left:0;right:0;bottom:0;padding:12px 16px 20px;background:#000;z-index:3}
+#svar,#val{position:fixed;inset:0;z-index:5;display:none;flex-direction:column;justify-content:center;padding:26px}
+#svar.ja{display:flex;background:#19e36b;color:#000}
+#svar.nej{display:flex;background:#ff3b30;color:#fff}
+#svar .stor,#val .stor{font-size:54px;line-height:.9;letter-spacing:-.04em}
+.vem{font-size:30px;line-height:1.05;letter-spacing:-.02em;margin-top:20px;word-break:break-word}
+.mer{margin-top:14px}
+#val{background:#000}
+#val.pa{display:flex}
+#val .knappar{margin-top:26px}
+#val button{padding:22px 13px;font-size:17px}
+#val button.alla{background:#19e36b}
+#pin{position:fixed;inset:0;z-index:9;background:#000;padding:28px 22px;display:none;flex-direction:column;justify-content:center}
