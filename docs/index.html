@@ -4,127 +4,189 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#050505">
 <title>271126</title>
 <link rel="stylesheet" href="stil.css">
 </head>
-<body>
+<body class="term">
 <main id="m"></main>
-<div id="blixt"></div>
 <script src="qrcode.js"></script>
 <script src="app.js"></script>
 <script>
 const m = document.getElementById('m');
 const kod = (location.search.slice(1).split('&')[0] || location.hash.slice(1)).toLowerCase().replace(/[^a-z0-9]/g, '');
-let lank = null, klocka = null;
+const KODEN = '271126';
+let lank = null, sprak = null, snabbt = false, klocka = null;
+try { sprak = localStorage.getItem('sprak'); } catch (e) {}
 
-// ---- nedräkning i stället för sidhuvud: siffrorna tickar ner mot 22.00 den 27 november
+const T = {
+  sv: {
+    ansluter: 'ansluter till 271126 ...', ok: 'ok',
+    ingen: 'ingen inbjudan hittades.', stangt: 'stängt.', kontakt: 'ingen kontakt. ladda om sidan.',
+    identitet: 'identitet', status: 'status', bjuden: 'BJUDEN', platser: 'platser',
+    du: n => n === 1 ? '1 (bara du)' : `${n} (du + ${n - 1})`,
+    dag: 'fredag 27 november 2026', dorr: 'dörrarna öppnar',
+    krav: 'ange kod för att tacka ja', ledtrad: 'ledtråd: datumet', kodrad: 'kod', fel: 'FEL KOD. försök igen.',
+    godkand: 'KOD GODKÄND', skriver: 'skriver ut biljett', biljett: 'BILJETT',
+    pers: n => n === 1 ? '1 PERSON' : `${n} PERSONER`,
+    galler: n => n === 1 ? 'gäller bara dig.' : `gäller dig och ${['', 'en', 'två', 'tre', 'fyra', 'fem'][n - 1] || n - 1} till.`,
+    samma: 'ni visar samma kod i dörren.', skarm: 'kommer ni inte samtidigt? skicka en skärmbild av koden.',
+    kladsel: 'kom som dig själv.', kvar: 'öppnar om', nu: 'öppet nu.',
+  },
+  en: {
+    ansluter: 'connecting to 271126 ...', ok: 'ok',
+    ingen: 'no invitation found.', stangt: 'closed.', kontakt: 'no connection. reload the page.',
+    identitet: 'identity', status: 'status', bjuden: 'INVITED', platser: 'seats',
+    du: n => n === 1 ? '1 (just you)' : `${n} (you + ${n - 1})`,
+    dag: 'friday 27 november 2026', dorr: 'doors open',
+    krav: 'enter code to accept', ledtrad: 'hint: the date', kodrad: 'code', fel: 'WRONG CODE. try again.',
+    godkand: 'CODE ACCEPTED', skriver: 'printing ticket', biljett: 'TICKET',
+    pers: n => n === 1 ? '1 PERSON' : `${n} PEOPLE`,
+    galler: n => n === 1 ? 'valid for you only.' : `valid for you and ${['', 'one', 'two', 'three', 'four', 'five'][n - 1] || n - 1} more.`,
+    samma: 'you all show the same code at the door.', skarm: 'not arriving together? send them a screenshot of the code.',
+    kladsel: 'come as yourself.', kvar: 'doors in', nu: 'open now.',
+  },
+};
+const t = () => T[sprak || 'sv'];
+
+// ---- utskrift tecken för tecken. Ett tryck på skärmen skriver ut resten direkt.
+const vila = ms => new Promise(r => setTimeout(r, snabbt ? 0 : ms));
+document.addEventListener('pointerdown', e => { if (!e.target.closest('button')) snabbt = true; });
+function botten() { window.scrollTo(0, document.body.scrollHeight); }
+async function skriv(text, klass) {
+  const rad = el('div', { class: 'l ' + (klass || '') });
+  m.append(rad);
+  for (const c of text) { rad.append(c); if (!snabbt) { botten(); await vila(11); } }
+  botten();
+  await vila(110);
+  return rad;
+}
+const tom = () => m.append(el('div', { class: 'l' }, ' '));
+
 function nedrakning() {
   const ms = new Date(FEST.start) - Date.now();
-  if (ms <= 0) return 'Nu.';
+  if (ms <= 0) return t().nu;
   const s = Math.floor(ms / 1000), tv = n => String(n).padStart(2, '0');
-  return `${Math.floor(s / 86400)} d ${tv(Math.floor(s / 3600) % 24)} h ${tv(Math.floor(s / 60) % 60)} m ${tv(s % 60)} s`;
+  return `${t().kvar} ${Math.floor(s / 86400)}d ${tv(Math.floor(s / 3600) % 24)}:${tv(Math.floor(s / 60) % 60)}:${tv(s % 60)}`;
 }
 
-function rad(v, h) { return el('div', { class: 'rad' }, el('span', {}, v), h ? el('b', {}, h) : ''); }
+const akt = vad => vad === 'Dörrarna öppnar' ? t().dorr : vad.toUpperCase();
 
-function visa(delar, snabbt) {
-  clearInterval(klocka);
-  const ned = el('b', {}, nedrakning());
-  klocka = setInterval(() => { ned.textContent = nedrakning(); }, 1000);
-  const allt = [
-    el('div', { class: 'nr' + (snabbt ? '' : ' flimmer') }, '271126'),
-    el('div', { class: 'block' }, rad(FEST.datum), el('div', { class: 'rad' }, ned)),
-    ...delar,
-  ];
-  allt.forEach((d, i) => d.style.setProperty('--i', i));
-  m.style.setProperty('--steg', snabbt ? '40ms' : '260ms');
-  m.className = 'in';
-  m.replaceChildren(...allt);
+async function program() {
+  await skriv('  ' + t().dag);
+  for (const [tid, vad] of FEST.program) await skriv(`  ${tid}  ${akt(vad)}`);
+  await skriv(`  ${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`);
 }
 
-function stangt(text) { visa([el('div', { class: 'fyll' }), el('div', { class: 'svag' }, text)], true); }
-
-const ANTAL = ['', 'en', 'två', 'tre', 'fyra', 'fem', 'sex'];
-const fornamn = n => n.trim().split(/\s+/)[0];
-
-function program() {
-  return el('div', { class: 'block' }, ...FEST.program.map(([t, v]) => rad(v, t)), rad(FEST.adress, FEST.plats));
+// ---- steg 0: språk
+function valjSprak() {
+  return new Promise(klar => {
+    const rad = el('div', { class: 'l val' }, '> språk / language: ',
+      ...['sv', 'en'].map(s => el('button', { onclick: () => {
+        sprak = s; try { localStorage.setItem('sprak', s); } catch (e) {}
+        document.documentElement.lang = s;
+        rad.replaceChildren('> språk / language: ' + s); klar();
+      } }, `[${s}]`)));
+    m.append(rad); botten();
+  });
 }
 
-// ---- steg 1: inbjudan. Man tackar ja genom att hålla knappen intryckt.
-function visaInbjudan() {
-  const extra = lank.platser - 1;
-  const hall = el('button', { class: 'hall', type: 'button' }, el('i'), el('span', {}, 'Håll inne för att tacka ja'));
-  const fel = el('div', { class: 'fel' });
-  let t = null, klar = false;
-  const borja = e => {
-    if (klar) return;
-    e.preventDefault();
-    hall.classList.add('pa');
-    t = setTimeout(async () => {
-      klar = true;
-      if (navigator.vibrate) navigator.vibrate([30, 40, 90]);
-      document.getElementById('blixt').classList.add('pa');
-      try {
-        const s = await skicka({ a: 'ja', k: kod });
-        if (!s.ok) throw new Error(s.fel);
-        lank = s;
-        visaBiljett(false);
-      } catch (err) {
-        klar = false; hall.classList.remove('pa');
-        fel.textContent = 'Ingen kontakt. Försök igen.';
-      }
-    }, 1100);
-  };
-  const slapp = () => { if (!klar) { clearTimeout(t); hall.classList.remove('pa'); } };
-  hall.addEventListener('pointerdown', borja);
-  ['pointerup', 'pointerleave', 'pointercancel'].forEach(h => hall.addEventListener(h, slapp));
-  hall.addEventListener('contextmenu', e => e.preventDefault());
-  hall.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') borja(e); });
-  hall.addEventListener('keyup', slapp);
+// ---- steg 1: inbjudan och kodlåset
+async function inbjudan() {
+  await skriv(`> ${t().identitet}: ${lank.namn.toUpperCase()}`);
+  await skriv(`> ${t().status}: ${t().bjuden}`, 'stark');
+  await skriv(`> ${t().platser}: ${t().du(lank.platser)}`);
+  tom();
+  await program();
+  tom();
+  await skriv(`> ${t().krav}`);
+  await skriv(`  ${t().ledtrad}`, 'svag');
+  await kodlas();
+}
 
-  visa([
-    el('div', { class: 'block' },
-      el('div', { class: 'stor' }, fornamn(lank.namn) + '.'),
-      el('div', { class: 'mellan' }, 'Du är bjuden.'),
-      extra > 0 ? el('div', { class: 'mellan' }, `Du får ta med ${ANTAL[extra] || extra} ${extra === 1 ? 'person' : 'personer'}.`) : ''),
-    program(),
-    el('div', { class: 'block' }, hall, fel),
-  ], false);
+function kodlas() {
+  return new Promise(klar => {
+    let v = '', last = false;
+    const visning = el('div', { class: 'l kod' });
+    const fel = el('div', { class: 'l fel' }, ' ');
+    const rita = () => { visning.textContent = `  ${t().kodrad}: ${v.padEnd(6, '_').split('').join(' ')}`; };
+    const tryck = n => {
+      if (last) return;
+      if (n === '<') { v = v.slice(0, -1); return rita(); }
+      if (v.length >= 6) return;
+      v += n; rita(); fel.textContent = ' ';
+      if (navigator.vibrate) navigator.vibrate(10);
+      if (v.length < 6) return;
+      if (v !== KODEN) { fel.textContent = '> ' + t().fel; v = ''; return setTimeout(rita, 350); }
+      last = true; document.removeEventListener('keydown', tangent);
+      knappar.remove(); fel.remove();
+      klar();
+    };
+    const tangent = e => { if (/^[0-9]$/.test(e.key)) tryck(e.key); else if (e.key === 'Backspace') tryck('<'); };
+    document.addEventListener('keydown', tangent);
+    const knappar = el('div', { class: 'tang' },
+      ...'123456789'.split('').map(n => el('button', { onclick: () => tryck(n) }, `[${n}]`)),
+      el('span'), el('button', { onclick: () => tryck('0') }, '[0]'), el('button', { onclick: () => tryck('<') }, '[<]'));
+    rita();
+    m.append(visning, knappar, fel); botten();
+  });
+}
+
+async function tackaJa() {
+  snabbt = false;
+  await skriv('> ' + t().godkand, 'stark');
+  const rad = await skriv(`> ${t().skriver} [          ]   0%`);
+  const svar = skicka({ a: 'ja', k: kod });
+  for (let i = 1; i <= 10; i++) { await vila(90); rad.textContent = `> ${t().skriver} [${'#'.repeat(i)}${' '.repeat(10 - i)}] ${String(i * 10).padStart(3)}%`; }
+  const s = await svar;
+  if (!s.ok) throw new Error(s.fel);
+  lank = s;
+  await vila(250);
 }
 
 // ---- steg 2: biljetten
-function visaBiljett(snabbt) {
-  const extra = lank.platser - 1;
-  const galler = extra === 0
-    ? [el('div', { class: 'mellan' }, 'Gäller bara dig.')]
-    : [el('div', { class: 'mellan' }, `Gäller dig och ${ANTAL[extra] || extra} till.`),
-       el('div', { class: 'block' },
-         rad('Ni visar samma kod i dörren.'),
-         rad('Kommer ni inte samtidigt? Skicka en skärmbild av koden till dem.'),
-         rad('Vakten släpper in högst ' + (ANTAL[lank.platser] || lank.platser) + ' på den.'))];
-  visa([
+function biljett() {
+  clearInterval(klocka);
+  const n = lank.platser, ned = el('div', { class: 'l svag' }, '  ' + nedrakning());
+  klocka = setInterval(() => { ned.textContent = '  ' + nedrakning(); }, 1000);
+  const byt = () => { sprak = sprak === 'en' ? 'sv' : 'en'; try { localStorage.setItem('sprak', sprak); } catch (e) {} biljett(); };
+  m.replaceChildren(
+    el('div', { class: 'l topp' }, el('span', {}, `271126 // ${t().biljett}`), el('button', { onclick: byt }, sprak === 'en' ? '[sv]' : '[en]')),
     el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + kod)),
-    el('div', { class: 'block' },
-      el('div', { class: 'stor' }, lank.platser === 1 ? '1 person' : lank.platser + ' personer'),
-      el('div', { class: 'svag' }, lank.namn),
-      ...galler),
-    program(),
-    el('div', { class: 'block' }, rad(FEST.kladsel)),
-  ], snabbt);
+    el('div', { class: 'l stor' }, t().pers(n)),
+    el('div', { class: 'l' }, `> ${lank.namn.toUpperCase()}`),
+    el('div', { class: 'l' }, '> ' + t().galler(n)),
+    ...(n > 1 ? [el('div', { class: 'l' }, '> ' + t().samma), el('div', { class: 'l' }, '> ' + t().skarm)] : []),
+    el('div', { class: 'l' }, ' '),
+    el('div', { class: 'l' }, '  ' + t().dag),
+    ...FEST.program.map(([tid, vad]) => el('div', { class: 'l' }, `  ${tid}  ${akt(vad)}`)),
+    el('div', { class: 'l' }, `  ${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`),
+    ned,
+    el('div', { class: 'l' }, ' '),
+    el('div', { class: 'l' }, '> ' + t().kladsel, el('span', { class: 'mark' })));
   window.scrollTo(0, 0);
 }
 
-async function ladda() {
-  if (!kod) return stangt('Ingen inbjudan.');
-  if (!API) return stangt('Stängt.');
-  try { lank = await hamta({ a: 'l', k: kod }); } catch (e) { return stangt('Ingen kontakt. Ladda om sidan.'); }
-  if (!lank.ok) return stangt('Ingen inbjudan.');
-  if (lank.ja) visaBiljett(true); else visaInbjudan();
+async function start() {
+  await skriv('271126');
+  if (!kod) return skriv('> ' + T.sv.ingen + ' / ' + T.en.ingen, 'svag');
+  if (!API) return skriv('> ' + T.sv.stangt, 'svag');
+  const hamtat = hamta({ a: 'l', k: kod }).catch(() => null);
+  if (!sprak) await valjSprak();
+  await skriv('> ' + t().ansluter);
+  lank = await hamtat;
+  if (!lank) return skriv('> ' + t().kontakt, 'fel');
+  if (!lank.ok) return skriv('> ' + t().ingen, 'svag');
+  await skriv('> ' + t().ok);
+  if (lank.ja) { await vila(300); return biljett(); }
+  await inbjudan();
+  for (;;) {
+    try { await tackaJa(); break; }
+    catch (e) { await skriv('> ' + t().kontakt, 'fel'); await kodlas(); }
+  }
+  biljett();
 }
-
-ladda();
+start();
 </script>
 </body>
 </html>
