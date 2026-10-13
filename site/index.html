@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#000000">
+<title>271126</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<main id="m"></main>
+<script src="qrcode.js"></script>
+<script src="app.js"></script>
+<script>
+const m = document.getElementById('m');
+const kod = (location.search.slice(1).split('&')[0] || location.hash.slice(1)).toLowerCase().replace(/[^a-z0-9]/g, '');
+const minne = 'b:' + kod;
+let lank = null;
+
+function huvud() {
+  const rader = [TEXT.datum, TEXT.tid, TEXT.plats].filter(Boolean).map(t => el('div', { class: 'rad' }, t));
+  return [el('div', { class: 'nr' }, '271126'), el('div', { class: 'block' }, ...rader)];
+}
+
+function visa(...delar) { m.replaceChildren(...huvud(), ...delar); }
+
+function stangt(text) { visa(el('div', { class: 'fyll' }), el('div', { class: 'svag' }, text)); }
+
+function minBiljett() {
+  let id = null;
+  try { id = localStorage.getItem(minne); } catch (e) {}
+  return lank.biljetter.find(b => b.id === id) || null;
+}
+
+function delaKnapp() {
+  const adress = location.origin + location.pathname + '?' + kod;
+  const k = el('button', { class: 'tom', onclick: async () => {
+    try {
+      if (navigator.share) await navigator.share({ url: adress });
+      else { await navigator.clipboard.writeText(adress); k.textContent = 'Kopierad'; }
+    } catch (e) {}
+  } }, 'Skicka länken vidare');
+  return k;
+}
+
+function visaBiljett(b) {
+  const andra = lank.biljetter.filter(x => x.id !== b.id);
+  const delar = [
+    el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + b.id)),
+    el('div', { class: 'namn' }, b.namn),
+    el('div', { class: 'block' },
+      el('div', { class: 'rad' }, 'Gäller en person, en gång.'),
+      el('div', { class: 'rad' }, TEXT.adress),
+      el('div', { class: 'rad' }, TEXT.kladsel)),
+  ];
+  if (lank.kvar > 0) {
+    delar.push(el('div', { class: 'block' },
+      el('div', {}, lank.kvar === 1 ? 'Du får ta med en person.' : `Du får ta med ${lank.kvar} personer.`),
+      el('div', { class: 'svag' }, lank.kvar === 1 ? 'Personen hämtar sin egen biljett på samma länk.' : 'De hämtar sin egen biljett på samma länk.'),
+      delaKnapp()));
+  }
+  if (andra.length) {
+    delar.push(el('div', { class: 'block svag' }, 'Också på den här länken: ' + andra.map(x => x.namn).join(', ')));
+  }
+  visa(...delar);
+}
+
+function visaFormular() {
+  const fel = el('div', { class: 'fel' });
+  const falt = el('input', { placeholder: 'Ditt namn', maxlength: '40', autocomplete: 'name', enterkeyhint: 'done' });
+  const knapp = el('button', {}, 'Hämta biljett');
+  const ta = async () => {
+    const namn = falt.value.trim();
+    if (namn.length < 2) { fel.textContent = 'Skriv ditt namn.'; return; }
+    knapp.disabled = true; fel.textContent = '';
+    try {
+      const s = await skicka({ a: 'ta', k: kod, namn });
+      if (s.ok) { try { localStorage.setItem(minne, s.biljett.id); } catch (e) {} }
+      else if (s.fel !== 'fullt') { fel.textContent = 'Det gick inte. Försök igen.'; knapp.disabled = false; return; }
+      await ladda();
+    } catch (e) { fel.textContent = 'Ingen kontakt. Försök igen.'; knapp.disabled = false; }
+  };
+  knapp.addEventListener('click', ta);
+  falt.addEventListener('keydown', e => { if (e.key === 'Enter') ta(); });
+  const delar = [el('div', { class: 'block' }, el('div', {}, 'Du är bjuden.'), el('div', { class: 'svag' }, 'En biljett per person.')),
+                 el('div', { class: 'block' }, falt, knapp, fel)];
+  if (lank.biljetter.length) delar.push(redanTagna('Har du redan hämtat din? Tryck på ditt namn.'));
+  visa(...delar);
+}
+
+function redanTagna(rubrik) {
+  return el('div', { class: 'block lista' }, el('div', { class: 'svag' }, rubrik),
+    ...lank.biljetter.map(b => el('button', { class: 'tom', onclick: () => visaBiljett(b) }, b.namn)));
+}
+
+async function ladda() {
+  if (!kod) return stangt('Ingen inbjudan.');
+  if (!API) return stangt('Stängt.');
+  try { lank = await hamta({ a: 'l', k: kod }); } catch (e) { return stangt('Ingen kontakt. Ladda om sidan.'); }
+  if (!lank.ok) return stangt('Ingen inbjudan.');
+  const min = minBiljett();
+  if (min) return visaBiljett(min);
+  if (lank.kvar > 0) return visaFormular();
+  visa(el('div', { class: 'block' }, 'Fullt.'), redanTagna('Är du en av dem? Tryck på ditt namn.'));
+}
+
+stangt('…');
+ladda();
+</script>
+</body>
+</html>

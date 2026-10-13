@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#000000">
+<title>271126 dörr</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body class="vakt">
+<video id="bild" playsinline muted></video>
+<div id="ram"></div>
+<div id="topp"><span>271126 dörr</span><span id="antal">–</span></div>
+<div id="botten"><span id="lage" class="svag">Startar kameran …</span></div>
+<div id="svar"><div class="stor"></div><div class="vem"></div><div class="mer"></div></div>
+<div id="pin">
+  <div class="nr">Dörr</div>
+  <div class="block"><input id="pinfalt" inputmode="numeric" autocomplete="off" placeholder="Kod"><button id="pinknapp">Öppna</button><div class="fel" id="pinfel"></div></div>
+</div>
+<canvas id="duk" hidden></canvas>
+<script src="jsqr.js"></script>
+<script src="app.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const svar = $('svar'), bild = $('bild'), duk = $('duk'), lage = $('lage');
+let pin = '';
+try { pin = localStorage.getItem('pin') || ''; } catch (e) {}
+let upptagen = false, senast = '', senastTid = 0;
+
+function visaAntal(s) { if (s && s.totalt != null) $('antal').textContent = `${s.inne} inne / ${s.totalt}`; }
+
+function visaSvar(ja, stor, vem, mer) {
+  svar.className = ja ? 'ja' : 'nej';
+  svar.querySelector('.stor').textContent = stor;
+  svar.querySelector('.vem').textContent = vem || '';
+  svar.querySelector('.mer').textContent = mer || '';
+  if (navigator.vibrate) navigator.vibrate(ja ? 60 : [120, 80, 120]);
+  clearTimeout(visaSvar.t);
+  visaSvar.t = setTimeout(stang, ja ? 2200 : 4500);
+}
+function stang() { svar.className = ''; upptagen = false; }
+svar.addEventListener('click', stang);
+
+async function kontrollera(id) {
+  if (upptagen) return;
+  upptagen = true;
+  lage.textContent = 'Kontrollerar …';
+  try {
+    const s = await skicka({ a: 'in', b: id, pin });
+    visaAntal(s);
+    if (s.ok) visaSvar(true, 'Ok', s.namn, s.via ? 'Via ' + s.via : '');
+    else if (s.fel === 'använd') visaSvar(false, 'Redan inne', s.namn, 'Insläppt ' + s.tid);
+    else if (s.fel === 'spärrad') visaSvar(false, 'Spärrad', s.namn, '');
+    else if (s.fel === 'pin') { upptagen = false; fragaPin('Fel kod.'); }
+    else visaSvar(false, 'Ogiltig', '', 'Biljetten finns inte.');
+  } catch (e) {
+    visaSvar(false, 'Ingen kontakt', '', 'Försök igen.');
+  }
+  lage.textContent = 'Sikta på biljetten';
+}
+
+function idUr(text) {
+  const t = /[?&]b=([a-z0-9]{6,20})/i.exec(text);
+  return t ? t[1].toLowerCase() : null;
+}
+
+function sok() {
+  if (bild.readyState >= 2 && !upptagen && $('pin').style.display !== 'flex') {
+    const skala = Math.min(1, 640 / bild.videoWidth);
+    duk.width = bild.videoWidth * skala; duk.height = bild.videoHeight * skala;
+    const g = duk.getContext('2d', { willReadFrequently: true });
+    g.drawImage(bild, 0, 0, duk.width, duk.height);
+    const kod = jsQR(g.getImageData(0, 0, duk.width, duk.height).data, duk.width, duk.height, { inversionAttempts: 'dontInvert' });
+    if (kod && kod.data) {
+      const id = idUr(kod.data), nu = Date.now();
+      // samma biljett som nyss visades läses inte om förrän efter fem sekunder
+      if (id && !(id === senast && nu - senastTid < 5000)) { senast = id; senastTid = nu; kontrollera(id); }
+    }
+  }
+  requestAnimationFrame(sok);
+}
+
+async function startaKamera() {
+  try {
+    bild.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    await bild.play();
+    lage.textContent = 'Sikta på biljetten';
+    sok();
+  } catch (e) {
+    lage.textContent = 'Kameran går inte att starta. Tillåt kamera för sidan.';
+  }
+}
+
+function fragaPin(fel) {
+  $('pin').style.display = 'flex';
+  $('pinfel').textContent = fel || '';
+  $('pinfalt').value = '';
+  $('pinfalt').focus();
+}
+
+async function provaPin() {
+  const kandidat = $('pinfalt').value.trim();
+  if (!kandidat) return;
+  try {
+    const s = await skicka({ a: 'lage', pin: kandidat });
+    if (!s.ok) { $('pinfel').textContent = 'Fel kod.'; return; }
+    pin = kandidat;
+    try { localStorage.setItem('pin', pin); } catch (e) {}
+    $('pin').style.display = 'none';
+    visaAntal(s);
+    borja();
+  } catch (e) { $('pinfel').textContent = 'Ingen kontakt.'; }
+}
+$('pinknapp').addEventListener('click', provaPin);
+$('pinfalt').addEventListener('keydown', e => { if (e.key === 'Enter') provaPin(); });
+
+let igang = false;
+function borja() {
+  if (igang) return;
+  igang = true;
+  startaKamera();
+  // en biljett som öppnats med mobilens vanliga kamera kommer in som ?b=...
+  const direkt = idUr(location.search);
+  if (direkt) { history.replaceState(null, '', location.pathname); kontrollera(direkt); }
+}
+
+(async () => {
+  if (!pin) return fragaPin();
+  try {
+    const s = await skicka({ a: 'lage', pin });
+    if (!s.ok) return fragaPin();
+    visaAntal(s);
+    borja();
+  } catch (e) { fragaPin('Ingen kontakt.'); }
+})();
+</script>
+</body>
+</html>
