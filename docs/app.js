@@ -9,7 +9,7 @@ const FEST = {
   datum: 'Fredag 27 november',
   program: [['22.00', 'Dörrarna öppnar'], ['23.00', 'Dygna'], ['00.00', 'Sonic Butler']],
   plats: 'Stockholm',
-  adress: 'Adressen kommer samma dag.',
+  adress: 'Pelikansgränd 5',
   kladsel: 'Kom som dig själv.',
 };
 

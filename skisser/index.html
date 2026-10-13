@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>271126 – tio spår</title>
+<style>
+@font-face{font-family:Hipnouma;src:url('file:///Users/gustavbergenudd/Desktop/Privat/Design/Fonts/Hipnouma/Hipnouma.otf')}
+@font-face{font-family:Monigue;src:url('file:///Users/gustavbergenudd/Desktop/Privat/Design/Fonts/Monigue/Monigue.otf')}
+@font-face{font-family:Gamone;src:url('file:///Users/gustavbergenudd/Desktop/Privat/Design/Fonts/Gamone/Gamone.otf')}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#1b1b1d;color:#ddd;font:500 13px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif;padding:26px}
+h1{font-size:15px;font-weight:600;margin-bottom:4px}
+.intro{color:#999;margin-bottom:22px;max-width:760px}
+.galler{display:grid;grid-template-columns:repeat(5,300px);gap:30px 26px}
+.kort h2{font-size:13px;font-weight:700;letter-spacing:.04em}
+.kort p{color:#999;font-size:11.5px;line-height:1.35;height:48px;margin:2px 0 8px}
+.tel{width:300px;height:600px;overflow:hidden auto;position:relative;border-radius:22px;outline:1px solid #3a3a3a;background:#000;scrollbar-width:none}
+.tel::-webkit-scrollbar{display:none}
+.om{background:none;border:0;color:#777;font:inherit;font-size:11px;margin-top:6px;cursor:pointer}
+button{font:inherit;cursor:pointer;border-radius:0;-webkit-appearance:none}
+.rot{min-height:600px;position:relative;display:flex;flex-direction:column}
+.qr{background:#fff;padding:5px}.qr svg{display:block;width:100%}
+
+/* ---------- gemensam biljett, färgas av varje spår ---------- */
+.bilj{padding:20px 18px 26px;gap:0}
+.bilj .qr{margin-bottom:16px}
+.bilj .stor{font-size:34px;line-height:.95}
+.bilj .und{margin-top:6px}
+.bilj .rader{margin-top:18px}
+.bilj .r{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid currentColor}
+.bilj .r:last-child{border-bottom:1px solid currentColor}
+
+/* 01 RADER */
+.v1{background:#000;color:#e9e9e9;font:700 11px/1.35 "Helvetica Neue",Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:22px 18px}
+.v1 .nr{font-size:60px;line-height:.86;letter-spacing:-.045em;margin-left:-3px}
+.v1 .r{display:flex;justify-content:space-between;border-top:1px solid;padding:8px 0}.v1 .r:last-child{border-bottom:1px solid}
+.v1 .b{margin-top:20px}.v1 .st{font-size:32px;line-height:.95;letter-spacing:-.03em}.v1 .me{font-size:17px;letter-spacing:-.01em;line-height:1.1;margin-top:8px}
+.v1 .hall{position:relative;overflow:hidden;width:100%;background:#000;color:#e9e9e9;border:1px solid;padding:18px 8px;letter-spacing:inherit;text-transform:inherit;user-select:none;touch-action:none}
+.v1 .hall i{position:absolute;inset:0;background:#e9e9e9;transform:scaleX(0);transform-origin:left;transition:transform .15s linear}
+.v1 .hall.pa i{transform:scaleX(1);transition:transform 1s linear}.v1 .hall span{position:relative;mix-blend-mode:difference}
+.v1.bilj .stor{letter-spacing:-.03em}
+
+/* 02 TERMINAL */
+.v2{background:#050505;color:#c8f7c5;font:400 11.5px/1.55 Menlo,Monaco,"Courier New",monospace;padding:18px 14px;text-shadow:0 0 6px rgba(120,255,140,.35)}
+.v2 pre{font:inherit;white-space:pre-wrap}
+.v2 .val{margin-top:10px;display:flex;gap:10px}
+.v2 .val button{background:none;color:inherit;border:1px solid;padding:9px 16px;text-shadow:inherit}
+.v2 .val button:hover{background:#c8f7c5;color:#050505;text-shadow:none}
+.v2 .mark{display:inline-block;width:7px;height:13px;background:#c8f7c5;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.v2.bilj .stor{font-size:24px}.v2.bilj .r{border-style:dashed}
+
+/* 03 KOPIA */
+.v3{background:#e6e3db;color:#0d0d0d;font:700 11px/1.3 "Helvetica Neue",Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.06em;padding:18px 16px;overflow:hidden}
+.v3::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.2;mix-blend-mode:multiply;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.6 1.05'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.v3 .jatte{font:900 128px/.78 Impact,"Arial Narrow",sans-serif;letter-spacing:-.03em;margin:6px 0 0 -4px;transform:scaleY(1.25);transform-origin:top}
+.v3 .band{background:#0d0d0d;color:#e6e3db;padding:6px 8px;display:inline-block;transform:rotate(-2.5deg);margin:54px 0 10px -4px;font-size:15px}
+.v3 .lista div{border-top:2.5px solid;padding:5px 0;display:flex;justify-content:space-between;font-size:13px}
+.v3 .stpl{margin:16px auto 0;width:118px;height:118px;border-radius:50%;border:3px dashed #0d0d0d;background:none;color:#0d0d0d;font:900 13px/1.1 "Helvetica Neue";letter-spacing:.08em;text-transform:uppercase;display:block}
+.v3 .ja{position:absolute;right:12px;bottom:36px;font:900 74px/1 Impact;color:#d1271c;border:6px solid #d1271c;padding:2px 12px 0;transform:rotate(-14deg) scale(3);opacity:0;mix-blend-mode:multiply}
+.v3 .ja.pa{transform:rotate(-14deg) scale(1);opacity:.9;transition:transform .14s cubic-bezier(.2,2,.4,1),opacity .05s}
+.v3.bilj .stor{font:900 46px/.9 Impact;letter-spacing:0}.v3.bilj .r{border-top-width:2.5px}.v3.bilj .r:last-child{border-bottom-width:2.5px}
+
+/* 04 DÖRRKOD */
+.v4{background:#0b0b0b;color:#eee;font:600 11px/1.3 "Helvetica Neue",sans-serif;letter-spacing:.2em;text-transform:uppercase;padding:26px 22px;align-items:center}
+.v4 .disp{font:300 36px/1 Menlo,monospace;letter-spacing:.24em;margin:26px 0 8px;height:40px;color:#ff3b30;text-shadow:0 0 12px rgba(255,59,48,.7)}
+.v4 .disp.ok{color:#19e36b;text-shadow:0 0 12px rgba(25,227,107,.7)}
+.v4 .disp.fel{animation:skaka .3s}
+@keyframes skaka{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.v4 .tang{display:grid;grid-template-columns:repeat(3,64px);gap:12px;margin-top:22px}
+.v4 .tang button{height:64px;border-radius:50%;background:#161616;border:1px solid #333;color:#eee;font:300 24px "Helvetica Neue"}
+.v4 .tang button:active{background:#eee;color:#000}
+.v4 .tips{color:#666;margin-top:22px;text-align:center}
+.v4.bilj{align-items:stretch}
+
+/* 05 ETT ORD */
+.v5{background:#000;color:#fff;font:900 54px/.88 "Helvetica Neue",Helvetica,sans-serif;letter-spacing:-.045em;text-transform:uppercase;padding:20px 16px;justify-content:flex-end;cursor:pointer;user-select:none}
+.v5.inv{background:#fff;color:#000}
+.v5 .ord{word-break:break-word;hyphens:auto}
+.v5 small{position:absolute;left:16px;top:18px;font:700 10px/1 "Helvetica Neue";letter-spacing:.2em}
+.v5 .tryck{position:absolute;right:16px;top:18px;font:700 10px/1 "Helvetica Neue";letter-spacing:.2em;animation:blink 1.2s steps(1) infinite}
+.v5 .halvor{position:absolute;inset:0;display:grid;grid-template-rows:1fr 1fr}
+.v5 .halvor button{border:0;font:inherit;letter-spacing:inherit;text-transform:inherit;text-align:left;padding:16px;display:flex;align-items:flex-end}
+.v5 .halvor .j{background:#fff;color:#000}.v5 .halvor .n{background:#000;color:#fff}
+.v5.bilj{font:700 11px/1.35 "Helvetica Neue";letter-spacing:.12em;justify-content:flex-start;cursor:default}
+.v5.bilj .stor{font:900 46px/.9 "Helvetica Neue";letter-spacing:-.045em}
+
+/* 06 STUBBEN */
+.v6{background:#151310;padding:22px 16px;font:400 11px/1.4 "Courier New",Courier,monospace;color:#1a1712;text-transform:uppercase;letter-spacing:.06em}
+.v6 .kort6{background:#efe6d2;padding:16px 14px;position:relative}
+.v6 .kort6.stub{margin-top:0;border-top:2px dashed #151310;transition:transform .5s ease-in,opacity .5s}
+.v6 .kort6.stub.riven{transform:translate(40px,120px) rotate(16deg);opacity:0}
+.v6 .kort6::before,.v6 .kort6::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#151310;bottom:-9px}
+.v6 .kort6::before{left:-9px}.v6 .kort6::after{right:-9px}
+.v6 .tit{font:400 40px/.95 Gamone,Didot,serif;text-transform:none;letter-spacing:-.01em;margin:8px 0 10px}
+.v6 .r6{display:flex;justify-content:space-between;border-top:1px solid #1a1712;padding:5px 0}
+.v6 .streck{height:34px;margin-top:10px;background:repeating-linear-gradient(90deg,#1a1712 0 2px,transparent 2px 4px,#1a1712 4px 5px,transparent 5px 9px,#1a1712 9px 12px,transparent 12px 14px)}
+.v6 .dra{position:relative;height:46px;border:1px solid #1a1712;margin-top:10px;touch-action:none;user-select:none}
+.v6 .dra span{position:absolute;inset:0;display:grid;place-items:center;padding-left:40px}
+.v6 .dra b{position:absolute;left:0;top:0;bottom:0;width:46px;background:#1a1712;color:#efe6d2;display:grid;place-items:center;font-size:18px;cursor:grab}
+.v6.bilj{color:#1a1712}.v6.bilj>*{position:relative}.v6.bilj{background:#efe6d2}
+.v6.bilj .stor{font:400 40px/.95 Gamone,Didot,serif;text-transform:none}
+
+/* 07 DIMMA */
+.v7{background:#08060c;color:#fff;font:300 14px/1.45 "Helvetica Neue",sans-serif;padding:24px 20px;overflow:hidden}
+.v7 .moln{position:absolute;inset:-30%;filter:blur(38px);opacity:.9;pointer-events:none;
+  background:radial-gradient(circle at 30% 30%,#ff4d1c 0,transparent 34%),radial-gradient(circle at 72% 44%,#6d28ff 0,transparent 38%),radial-gradient(circle at 44% 78%,#0aa3ff 0,transparent 36%);animation:driv 14s ease-in-out infinite alternate}
+@keyframes driv{to{transform:translate(8%,-6%) rotate(24deg) scale(1.15)}}
+.v7>*:not(.moln){position:relative}
+.v7 .lit{font-size:11px;letter-spacing:.24em;text-transform:uppercase;opacity:.8}
+.v7 .hej{font:200 46px/1 "Helvetica Neue";letter-spacing:-.03em;margin:120px 0 14px}
+.v7 .prog{margin-top:18px;font-size:12.5px;opacity:.9}
+.v7 .rund{margin:26px auto 0;width:96px;height:96px;border-radius:50%;border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.08);backdrop-filter:blur(6px);color:#fff;font:300 15px "Helvetica Neue";display:block;transition:transform .9s ease-out,background .9s}
+.v7 .rund.pa{transform:scale(9);background:#fff}
+.v7.bilj .stor{font:200 44px/1 "Helvetica Neue";letter-spacing:-.03em}.v7.bilj .r{border-color:rgba(255,255,255,.5)}
+
+/* 08 FICKLAMPA */
+.v8{background:#000;color:#fff;font:700 12px/1.4 "Helvetica Neue",sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:0;cursor:none;touch-action:none}
+.v8 .lager{position:absolute;inset:0;padding:26px 20px;display:flex;flex-direction:column;
+  -webkit-mask:radial-gradient(circle 74px at var(--x,50%) var(--y,30%),#000 0,#000 55%,transparent 100%);mask:radial-gradient(circle 74px at var(--x,50%) var(--y,30%),#000 0,#000 55%,transparent 100%)}
+.v8 .big{font:900 62px/.86 "Helvetica Neue";letter-spacing:-.05em}
+.v8 .lager .r{border-top:1px solid;padding:8px 0;display:flex;justify-content:space-between}
+.v8 .lager button{margin-top:auto;background:#fff;color:#000;border:0;padding:16px;letter-spacing:inherit;text-transform:inherit;font:inherit;cursor:none}
+.v8 .ledtrad{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#3a3a3a;font-size:9px;pointer-events:none}
+.v8.bilj{padding:20px 18px 26px;cursor:default}
+
+/* 09 GÄSTLISTAN */
+.v9{background:#f4f1e8;color:#111;font:400 11.5px/1.3 "Courier New",Courier,monospace;padding:20px 14px;text-transform:uppercase}
+.v9 .hd{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:4px;display:flex;justify-content:space-between;font-weight:700}
+.v9 .li{display:grid;grid-template-columns:22px 1fr 30px 26px;align-items:center;border-bottom:1px solid #111;height:27px}
+.v9 .li u{display:block;height:11px;background:#111;text-decoration:none}
+.v9 .li.du{background:#fff36b;font-weight:700;height:38px;font-size:13px}
+.v9 .ruta{width:18px;height:18px;border:2px solid #111;background:none;display:grid;place-items:center;font:700 16px/1 "Courier New";padding:0;color:#111}
+.v9 .li.du .ruta{width:24px;height:24px;animation:puls 1.2s infinite}
+@keyframes puls{50%{box-shadow:0 0 0 5px rgba(0,0,0,.18)}}
+.v9 .ft{margin-top:12px;font-size:10.5px;line-height:1.5}
+.v9.bilj .stor{font:700 30px/1 "Courier New"}
+
+/* 10 NEON */
+.v10{background:#e2ff3d;color:#0c0c0c;font:700 11px/1.3 "Helvetica Neue",sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:16px 16px 20px;overflow:hidden}
+.v10 .topp{display:flex;justify-content:space-between;position:relative;z-index:2}.v10 .topp span{background:#e2ff3d;padding:1px 4px}
+.v10 .tal{font:230px/.74 Hipnouma,Impact;transform:scaleX(1.9);transform-origin:left top;margin:14px 0 -18px -6px;white-space:nowrap}
+.v10 .l{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid;padding:5px 0 1px;font:30px/1 Monigue,Impact;letter-spacing:0}
+.v10 .l b{font:700 11px "Helvetica Neue";letter-spacing:.1em}
+.v10 .l.sv{background:#0c0c0c;color:#e2ff3d;margin:0 -6px;padding-left:6px;padding-right:6px}
+.v10 .kn{width:100%;margin-top:14px;background:#0c0c0c;color:#e2ff3d;border:0;padding:18px;font:34px/1 Monigue,Impact;text-transform:uppercase}
+.v10.byt{filter:invert(1)}
+.v10.bilj .stor{font:52px/.9 Monigue,Impact;letter-spacing:0}.v10.bilj .r{border-top-width:2px}.v10.bilj .r:last-child{border-bottom-width:2px}
+</style>
+</head>
+<body>
+<h1>271126 – tio spår för gästsidan</h1>
+<div class="intro">Varje mobil går att använda. Gör det som står för att tacka ja, så ser du biljetten i samma stil. ”Börja om” återställer. Exemplet är Anna, som får ta med två.</div>
+<div class="galler" id="g"></div>
+<script src="../docs/qrcode.js"></script>
+<script>
+const D = { namn: 'Anna', platser: 3, datum: 'Fredag 27 november', adress: 'Pelikansgränd 5', stad: 'Stockholm',
+  program: [['22.00', 'Dörrarna öppnar'], ['23.00', 'Dygna'], ['00.00', 'Sonic Butler']] };
+const STILLA = new URLSearchParams(location.search).has('stilla'), DIREKT = new URLSearchParams(location.search).has('biljett');
+const vila = ms => new Promise(r => setTimeout(r, STILLA ? 0 : ms));
+
+function el(t, a, ...b) { const e = document.createElement(t); for (const [k, v] of Object.entries(a || {})) { if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v); } e.append(...b); return e; }
+function qr() {
+  const q = qrcode(0, 'M'); q.addData('https://271126.com/v.html?b=exempel1'); q.make();
+  const n = q.getModuleCount(), m = 3, s = n + 2 * m; let d = '';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (q.isDark(y, x)) d += `M${x + m} ${y + m}h1v1h-1z`;
+  const w = el('div', { class: 'qr' }); w.innerHTML = `<svg viewBox="0 0 ${s} ${s}" shape-rendering="crispEdges"><rect width="${s}" height="${s}" fill="#fff"/><path d="${d}"/></svg>`; return w;
+}
+const rad = (v, h) => el('div', { class: 'r' }, el('span', {}, v), el('span', {}, h || ''));
+
+function biljett(rot, klass) {
+  rot.className = 'rot bilj ' + klass;
+  rot.replaceChildren(qr(),
+    el('div', { class: 'stor' }, '3 personer'),
+    el('div', { class: 'und' }, 'Gäller dig och två till. Ni visar samma kod i dörren.'),
+    el('div', { class: 'rader' }, ...D.program.map(([t, v]) => rad(v, t)), rad(D.adress, D.stad), rad('Kom som dig själv')));
+}
+
+const SPAR = [
+  ['01 Rader', 'Den du har sett. Stram, svart, rader som tänds. Håll inne knappen för att tacka ja.', 'v1', (r, klar) => {
+    const h = el('button', { class: 'hall' }, el('i'), el('span', {}, 'Håll inne för att tacka ja')); let t;
+    h.onpointerdown = () => { h.classList.add('pa'); t = setTimeout(klar, 1000); };
+    h.onpointerup = h.onpointerleave = () => { clearTimeout(t); h.classList.remove('pa'); };
+    r.append(el('div', { class: 'nr' }, '271126'), el('div', { class: 'b' }, rad(D.datum), rad('45 d 03 h 12 m 08 s')),
+      el('div', { class: 'b' }, el('div', { class: 'st' }, 'Anna.'), el('div', { class: 'me' }, 'Du är bjuden. Du får ta med två personer.')),
+      el('div', { class: 'b' }, ...D.program.map(([t, v]) => rad(v, t)), rad(D.adress)), el('div', { class: 'b' }, h));
+  }],
+  ['02 Terminal', 'En gammal dator som skriver ut inbjudan tecken för tecken. Du svarar J eller N vid markören.', 'v2', async (r, klar) => {
+    const p = el('pre'); r.append(p);
+    const rader = ['> ansluter till 271126 ...', '> identitet: ANNA', '> status: BJUDEN', '> platser: 3 (du + 2)', '', '  2026-11-27  FREDAG', '  22:00  dörrarna öppnar', '  23:00  DYGNA', '  00:00  SONIC BUTLER', '', '  PELIKANSGRÄND 5, STOCKHOLM', '', '> kommer du? [J/N]'];
+    for (const l of rader) { for (const c of l) { p.append(c); await vila(14); } p.append('\n'); await vila(120); }
+    r.append(el('div', { class: 'val' }, el('button', { onclick: klar }, '[ J ]'), el('button', {}, '[ N ]'), el('span', { class: 'mark' })));
+  }],
+  ['03 Kopia', 'Kopierat flygblad från en lyktstolpe. Brus, sneda remsor, feta siffror. Tryck för att stämpla JA.', 'v3', (r, klar) => {
+    const ja = el('div', { class: 'ja' }, 'JA');
+    r.append(el('div', {}, 'Till Anna + 2'), el('div', { class: 'jatte' }, '27.11'), el('div', { class: 'band' }, 'Pelikansgränd 5'),
+      el('div', { class: 'lista' }, ...D.program.map(([t, v]) => el('div', {}, el('span', {}, v), el('span', {}, t)))),
+      el('button', { class: 'stpl', onclick: () => { ja.classList.add('pa'); setTimeout(klar, 900); } }, 'Tryck här för att stämpla'), ja);
+  }],
+  ['04 Dörrkod', 'En kodlås vid en omärkt dörr. Inget står förklarat. Koden är datumet: slå 271126 för att komma in.', 'v4', (r, klar) => {
+    let v = ''; const d = el('div', { class: 'disp' }, '······');
+    const visa = () => { d.textContent = v.padEnd(6, '·'); };
+    const tryck = n => { if (v.length >= 6) return; v += n; visa();
+      if (v.length === 6) { if (v === '271126') { d.classList.add('ok'); setTimeout(klar, 700); } else { d.classList.add('fel'); setTimeout(() => { v = ''; visa(); d.classList.remove('fel'); }, 450); } } };
+    r.append(el('div', {}, 'Anna'), d, el('div', { class: 'tang' }, ...'123456789'.split('').map(n => el('button', { onclick: () => tryck(n) }, n)), el('span'), el('button', { onclick: () => tryck('0') }, '0')),
+      el('div', { class: 'tips' }, 'Koden är datumet'));
+  }],
+  ['05 Ett ord', 'Ett ord per skärm, enormt, svart och vitt om vartannat. Tryck för nästa. Sist delas skärmen i JA och NEJ.', 'v5', (r, klar) => {
+    const ord = ['Anna.', 'Du är bjuden.', 'Fredag 27 nov.', '22.00', 'Dygna 23.00', 'Sonic Butler 00.00', 'Pelikans­gränd 5', 'Ta med två.'];
+    let i = 0; const o = el('div', { class: 'ord' }), s = el('small'), t = el('div', { class: 'tryck' }, 'Tryck');
+    const visa = () => { o.innerHTML = ord[i]; s.textContent = `${i + 1}/${ord.length + 1}`; r.classList.toggle('inv', i % 2 === 1); };
+    r.append(s, t, o); visa();
+    r.onclick = () => { if (++i < ord.length) return visa();
+      r.onclick = null; r.append(el('div', { class: 'halvor' }, el('button', { class: 'j', onclick: e => { e.stopPropagation(); klar(); } }, 'Ja'), el('button', { class: 'n' }, 'Nej'))); };
+  }],
+  ['06 Stubben', 'En riktig pappersbiljett med perforering och streckkod. Dra reglaget åt höger för att riva av stubben.', 'v6', (r, klar) => {
+    const stub = el('div', { class: 'kort6 stub' }), knopp = el('b', {}, '→'), dra = el('div', { class: 'dra' }, el('span', {}, 'Dra för att riva'), knopp);
+    let x0 = null;
+    knopp.onpointerdown = e => { x0 = e.clientX; knopp.setPointerCapture(e.pointerId); };
+    knopp.onpointermove = e => { if (x0 == null) return; const dx = Math.max(0, Math.min(dra.clientWidth - 46, e.clientX - x0)); knopp.style.left = dx + 'px';
+      if (dx >= dra.clientWidth - 50) { x0 = null; stub.classList.add('riven'); setTimeout(klar, 550); } };
+    knopp.onpointerup = () => { if (x0 != null) { x0 = null; knopp.style.left = 0; } };
+    stub.append(el('div', {}, 'Stubbe · behålls av dörren'), dra);
+    r.append(el('div', { class: 'kort6' }, el('div', { class: 'r6' }, el('span', {}, 'Nr 0027'), el('span', {}, 'Entré × 3')), el('div', { class: 'tit' }, 'Tjugosju elva tjugosex'),
+      el('div', { class: 'r6' }, el('span', {}, 'Innehavare'), el('span', {}, 'Anna + 2')), ...D.program.map(([t, v]) => el('div', { class: 'r6' }, el('span', {}, v), el('span', {}, t))),
+      el('div', { class: 'r6' }, el('span', {}, D.adress), el('span', {}, 'Sthlm')), el('div', { class: 'streck' })), stub);
+  }],
+  ['07 Dimma', 'Färgad rök som rör sig långsamt bakom tunn, lugn text. Tryck på cirkeln och den sväljer hela skärmen.', 'v7', (r, klar) => {
+    const k = el('button', { class: 'rund', onclick: () => { k.classList.add('pa'); k.textContent = ''; setTimeout(klar, 800); } }, 'jag kommer');
+    r.append(el('div', { class: 'moln' }), el('div', { class: 'lit' }, '27.11.26'), el('div', { class: 'hej' }, 'Anna,'), el('div', {}, 'du är bjuden. Ta med två.'),
+      el('div', { class: 'prog' }, '22.00 dörrarna öppnar', el('br'), '23.00 Dygna', el('br'), '00.00 Sonic Butler', el('br'), 'Pelikansgränd 5'), k);
+  }],
+  ['08 Ficklampa', 'Skärmen är helsvart. Dra fingret över den så lyser en ficklampa upp texten. Knappen finns längst ner.', 'v8', (r, klar) => {
+    const l = el('div', { class: 'lager' }, el('div', { class: 'big' }, '271126'), el('div', { style: 'margin:18px 0' }, 'Anna. Du är bjuden. Ta med två.'),
+      ...D.program.map(([t, v]) => rad(v, t)), rad(D.adress), el('button', { onclick: klar }, 'Jag kommer'));
+    const flytta = e => { const b = r.getBoundingClientRect(); l.style.setProperty('--x', (e.clientX - b.left) + 'px'); l.style.setProperty('--y', (e.clientY - b.top + r.parentElement.scrollTop) + 'px'); };
+    r.onpointermove = flytta; r.onpointerdown = flytta;
+    r.append(l, el('div', { class: 'ledtrad' }, 'Dra fingret över skärmen'));
+  }],
+  ['09 Gästlistan', 'Vaktens utskrivna lista på skrivplatta. Alla andra namn är överstrukna. Kryssa i rutan på din egen rad.', 'v9', (r, klar) => {
+    const ruta = el('button', { class: 'ruta', onclick: () => { ruta.textContent = '×'; setTimeout(klar, 600); } });
+    const rader = [58, 44, 70, 36, 62, 0, 50, 66, 40, 56, 48, 60].map((b, i) => b
+      ? el('div', { class: 'li' }, el('span', {}, String(i + 14).padStart(2, '0')), el('u', { style: `width:${b}%` }), el('span', {}, ['', '+1', '', '+2', '+1', '', '', '+1', '', '', '+2', ''][i]), el('span', { class: 'ruta' }, i % 3 === 0 ? '×' : ''))
+      : el('div', { class: 'li du' }, el('span', {}, '19'), el('span', {}, 'Anna'), el('span', {}, '+2'), ruta));
+    r.append(el('div', { class: 'hd' }, el('span', {}, 'Gästlista 271126'), el('span', {}, 'Sid 2/7')), ...rader,
+      el('div', { class: 'ft' }, 'Fre 27 nov · Pelikansgränd 5', el('br'), '22.00 dörr · 23.00 Dygna · 00.00 Sonic Butler', el('br'), 'Kryssa på din rad om du kommer.'));
+  }],
+  ['10 Neon', 'Klubbaffischen i neongult med den vågiga siffran. Högljudd och glad. En stor knapp, skärmen slår om.', 'v10', (r, klar) => {
+    r.append(el('div', { class: 'topp' }, el('span', {}, 'Anna + 2'), el('span', {}, 'Pelikansgränd 5')), el('div', { class: 'tal' }, '27'),
+      ...D.program.map(([t, v], i) => el('div', { class: 'l' + (i === 1 ? ' sv' : '') }, el('span', {}, v), el('b', {}, t))),
+      el('button', { class: 'kn', onclick: () => { r.classList.add('byt'); setTimeout(klar, 350); } }, 'Jag kommer'));
+  }],
+];
+
+const g = document.getElementById('g');
+for (const [namn, text, klass, bygg] of SPAR) {
+  const tel = el('div', { class: 'tel' });
+  const starta = () => {
+    const rot = el('div', { class: 'rot ' + klass }); tel.replaceChildren(rot); tel.scrollTop = 0;
+    if (DIREKT) return biljett(rot, klass);
+    bygg(rot, () => biljett(rot, klass));
+  };
+  g.append(el('div', { class: 'kort' }, el('h2', {}, namn), el('p', {}, text), tel, el('button', { class: 'om', onclick: starta }, '↺ Börja om')));
+  starta();
+}
+</script>
+</body>
+</html>

@@ -49,7 +49,7 @@ const ANTAL = ['', 'en', 'två', 'tre', 'fyra', 'fem', 'sex'];
 const fornamn = n => n.trim().split(/\s+/)[0];
 
 function program() {
-  return el('div', { class: 'block' }, ...FEST.program.map(([t, v]) => rad(v, t)), rad(FEST.plats), rad(FEST.adress));
+  return el('div', { class: 'block' }, ...FEST.program.map(([t, v]) => rad(v, t)), rad(FEST.adress, FEST.plats));
 }
 
 // ---- steg 1: inbjudan. Man tackar ja genom att hålla knappen intryckt.
