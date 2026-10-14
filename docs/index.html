@@ -97,9 +97,9 @@ const botten = () => window.scrollTo(0, document.body.scrollHeight);
 async function skriv(text, klass) {
   const r = el('div', { class: 'l ' + (klass || '') });
   m.append(r);
-  for (const c of text) { r.append(c); if (!snabbt) { botten(); await vila(11); } }
+  for (const c of text) { r.append(c); if (!snabbt) { botten(); await vila(26); } }
   botten();
-  await vila(110);
+  await vila(320);
   return r;
 }
 const tom = () => m.append(el('div', { class: 'l' }, ' '));
@@ -264,8 +264,6 @@ async function laddaPasserkort() {
   snabbt = false;
   const svar = skicka({ a: 'svar', k: kod, svar: 'ja' });
   await vila(500);
-  m.className = 'slack';
-  await vila(350);
   m.className = 'mitten';
   const stapel = rad('');
   m.replaceChildren(rad('271126', 'svag'), rad(`> ${t().laddar}`), stapel);
@@ -338,7 +336,7 @@ function visaKort() {
   clearInterval(klocka);
   const n = lank.platser, tips = el('div', { class: 'l svag tips' });
   const saknas = n > 1 && (lank.gaster || []).length < n - 1;
-  m.className = 'ny';
+  m.className = '';
   m.replaceChildren(
     topp(t().passerkort, sprakknapp(visaKort)),
     el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + kod)),
@@ -368,7 +366,7 @@ function visaInfo() {
   clearInterval(klocka);
   const ned = rad('> ' + nedrakning(), 'stark');
   klocka = setInterval(() => { ned.textContent = '> ' + nedrakning(); }, 1000);
-  m.className = 'ny';
+  m.className = '';
   m.replaceChildren(
     topp(t().info, sprakknapp(visaInfo)),
     ned,
