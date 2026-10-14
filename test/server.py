@@ -19,7 +19,7 @@ PIN = "1234"
 def ny():
     return {
         "solo1111": {"namn": "Anna Test", "platser": 1, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
-        "plus1111": {"namn": "Erik Test", "platser": 2, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
+        "plus1111": {"namn": "Erik Test", "villkor": "en tjej", "platser": 2, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
         "plus2222": {"namn": "Maja Test", "platser": 3, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
         "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "svar": "", "gaster": [], "inne": 0, "senast": None},
     }
@@ -38,7 +38,7 @@ def visa(kod):
     l = LANKAR.get(kod)
     if not l or l["sparrad"]:
         return {"ok": False, "fel": "okänd"}
-    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"], "gaster": l["gaster"]}
+    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"], "gaster": l["gaster"], "villkor": l.get("villkor", "")}
 
 
 def svara(kod, svar):

@@ -40,7 +40,7 @@ const T = {
     tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
     vem: n => n === 2 ? 'vem tar du med? förnamn och efternamn.' : 'vilka tar du med? förnamn och efternamn.',
     valfritt: 'går att hoppa över och fylla i senare.', gast: i => `gäst ${i}`, sparaNamn: 'SPARA NAMNEN', hoppa: 'HOPPA ÖVER',
-    gastlista: 'GÄSTLISTA', namnSaknas: 'namn saknas', enKod: 'en kod för er alla.', olikaTider: 'kommer ni vid olika tider? skicka en skärmbild av koden.',
+    villkorRad: 'villkor för ditt plus', gastlista: 'GÄSTLISTA', namnSaknas: 'namn saknas', enKod: 'en kod för er alla.', olikaTider: 'kommer ni vid olika tider? skicka en skärmbild av koden.',
     medDig: 'med dig', andraGaster: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', laggTill: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', saknas: 'namn på dina gäster saknas.', sparar: 'sparar ...',
     passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
@@ -72,7 +72,7 @@ const T = {
     tidigare: s => `your last answer: ${s}. you can answer again.`,
     vem: n => n === 2 ? 'who are you bringing? first and last name.' : 'who are you bringing? first and last names.',
     valfritt: 'you can skip this and fill it in later.', gast: i => `guest ${i}`, sparaNamn: 'SAVE NAMES', hoppa: 'SKIP',
-    gastlista: 'GUEST LIST', namnSaknas: 'name missing', enKod: 'one code for all of you.', olikaTider: 'arriving at different times? send them a screenshot of the code.',
+    villkorRad: 'condition for your plus', gastlista: 'GUEST LIST', namnSaknas: 'name missing', enKod: 'one code for all of you.', olikaTider: 'arriving at different times? send them a screenshot of the code.',
     medDig: 'with you', andraGaster: 'ADD / CHANGE GUEST NAMES', laggTill: 'ADD / CHANGE GUEST NAMES', saknas: 'your guests have no names yet.', sparar: 'saving ...',
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
@@ -180,7 +180,7 @@ function valjSprak() {
 
 async function inbjudan() {
   await skriv(`> ${t().identitet}: ${lank.namn.toUpperCase()}`, 'stark');
-  if (lank.platser > 1) await skriv(`> ${t().sallskap}: ${t().plus(lank.platser)}`);
+  if (lank.platser > 1) await skriv(`> ${t().sallskap}: ${t().plus(lank.platser)}${lank.villkor ? ' (' + lank.villkor + ')' : ''}`);
   tom();
   await skriv('> ' + t().lana);
   tom();
@@ -252,7 +252,8 @@ function gastFormular(ombord) {
         lank.gaster = s.gaster; ruta.remove(); klar();
       } catch (e) { fel.textContent = '> ' + t().kontakt; spara.disabled = false; }
     } }, t().sparaNamn);
-    const ruta = el('div', { class: 'gastruta' }, rad('> ' + t().vem(lank.platser), 'stark'), rad('  ' + t().valfritt, 'svag'), ...falt,
+    const ruta = el('div', { class: 'gastruta' }, rad('> ' + t().vem(lank.platser), 'stark'),
+      ...(lank.villkor ? [rad(`  ${t().villkorRad}: ${lank.villkor}`, 'stark')] : []), rad('  ' + t().valfritt, 'svag'), ...falt,
       el('div', { class: 'rutor' }, spara, el('button', { onclick: () => { ruta.remove(); klar(); } }, t().hoppa)), fel);
     (ombord || m).append(ruta);
     if (!ombord) botten();
@@ -343,7 +344,7 @@ function visaKort() {
     el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + kod)),
     rad(t().pers(n), 'stor'),
     rad('\u00a0'),
-    rad(t().gastlista, 'rubrik'),
+    rad(t().gastlista + (lank.villkor && n > 1 ? `  (plus: ${lank.villkor})` : ''), 'rubrik'),
     el('div', { class: 'lista' }, ...Array.from({ length: n }, (_, i) => {
       const namn = i === 0 ? lank.namn : (lank.gaster || [])[i - 1];
       return el('div', { class: 'post' + (namn ? '' : ' tom') }, el('span', { class: 'pnr' }, String(i + 1)), el('span', {}, namn ? namn.toUpperCase() : t().namnSaknas));
