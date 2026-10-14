@@ -1,7 +1,7 @@
 // 271126 – gemensamt för gästsidan och dörrsidan.
 
 // Adressen till Apps Script-webbappen. Lokalt (test) går allt mot /api.
-const API_SKARP = '';
+const API_SKARP = 'https://script.google.com/macros/s/AKfycbz3hianlUFv3_GCfyS2Ia2xP5g_s5VW0JW_SR1wJMRNuYZCoV0vOMru_dBwowZCwz2h/exec';
 const API = ['localhost', '127.0.0.1'].includes(location.hostname) ? '/api' : API_SKARP;
 
 const FEST = {
