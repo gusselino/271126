@@ -130,3 +130,8 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .karta .har.sikte circle:first-child{transform-box:fill-box;transform-origin:center;animation:sikte .7s ease-out}
 @keyframes sikte{0%{transform:scale(6);opacity:0}60%{opacity:1}100%{transform:scale(1)}}
 .term .karta .namn text{transition:opacity .2s steps(2)}
+/* kartan börjar helt tom: ingen ram, inga linjer, inga namn */
+.term .karta.bygger svg{border-color:transparent;transition:border-color .3s steps(3)}
+.term .karta.bygger.ram svg{border-color:rgba(200,247,197,.3)}
+.term .karta.bygger svg path{opacity:0}
+.term .karta.bygger .namn text,.term .karta.bygger .har{opacity:0}

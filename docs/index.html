@@ -133,7 +133,7 @@ async function byggKarta(k, status) {
   const sv = k.querySelector('svg'), paus = ms => new Promise(r => setTimeout(r, ms));
   const rita = (p, ms) => {
     const L = p.getTotalLength();
-    p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+    p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.style.opacity = 1;
     p.getBoundingClientRect();
     p.style.transition = `stroke-dashoffset ${ms}ms linear`;
     p.style.strokeDashoffset = 0;
@@ -143,19 +143,23 @@ async function byggKarta(k, status) {
   namn.forEach(n => { n.style.opacity = 0; }); har.style.opacity = 0;
   const skrivStatus = async text => { status.textContent = ''; for (const c of text) { status.textContent += c; await paus(14); } };
   const [lat, lon] = [59.3239719, 18.0741567];
+  await paus(500);
   await skrivStatus(t().kartLaddar);
-  rita(kust, 900); await paus(600);
+  await paus(300);
+  k.classList.add('ram');
+  await paus(400);
+  rita(kust, 1100); await paus(800);
   status.dataset.steg = 'gator';
-  rita(gator, 2600);
+  rita(gator, 4000);
   const start = Date.now();
-  while (Date.now() - start < 2600) {
-    const p = (Date.now() - start) / 2600;
+  while (Date.now() - start < 4000) {
+    const p = (Date.now() - start) / 4000;
     status.textContent = `> ${t().kartSoker} ${(lat + (1 - p) * (Math.random() - .5) * .02).toFixed(4)} N ${(lon + (1 - p) * (Math.random() - .5) * .04).toFixed(4)} E`;
     await paus(60);
   }
-  for (const n of namn) { n.style.opacity = ''; await paus(140); }
+  for (const n of namn) { n.style.opacity = 1; await paus(140); }
   rita(mal, 500); await paus(500);
-  har.style.opacity = ''; har.classList.add('sikte');
+  har.style.opacity = 1; har.querySelectorAll('path').forEach(p => { p.style.opacity = 1; }); har.classList.add('sikte');
   if (navigator.vibrate) navigator.vibrate(30);
   status.textContent = `> ${t().kartLast}: ${lat.toFixed(4)} N ${lon.toFixed(4)} E`;
   status.classList.add('stark');
