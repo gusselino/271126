@@ -18,10 +18,10 @@ PIN = "1234"
 
 def ny():
     return {
-        "solo1111": {"namn": "Anna Test", "platser": 1, "sparrad": False, "svar": "", "inne": 0, "senast": None},
-        "plus1111": {"namn": "Erik Test", "platser": 2, "sparrad": False, "svar": "", "inne": 0, "senast": None},
-        "plus2222": {"namn": "Maja Test", "platser": 3, "sparrad": False, "svar": "", "inne": 0, "senast": None},
-        "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "svar": "", "inne": 0, "senast": None},
+        "solo1111": {"namn": "Anna Test", "platser": 1, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
+        "plus1111": {"namn": "Erik Test", "platser": 2, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
+        "plus2222": {"namn": "Maja Test", "platser": 3, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
+        "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "svar": "", "gaster": [], "inne": 0, "senast": None},
     }
 
 
@@ -38,7 +38,7 @@ def visa(kod):
     l = LANKAR.get(kod)
     if not l or l["sparrad"]:
         return {"ok": False, "fel": "okänd"}
-    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"]}
+    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"], "gaster": l["gaster"]}
 
 
 def svara(kod, svar):
@@ -49,7 +49,18 @@ def svara(kod, svar):
         if not l or l["sparrad"]:
             return {"ok": False, "fel": "okänd"}
         l["svar"] = svar
-        return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": svar}
+        return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": svar, "gaster": l["gaster"]}
+
+
+def spara_gaster(kod, gaster):
+    lista = [" ".join(str(g or "").replace("<", "").replace(">", "").replace(";", "").split())[:60] for g in (gaster if isinstance(gaster, list) else [])]
+    lista = [g for g in lista if g]
+    with LAS:
+        l = LANKAR.get(kod)
+        if not l or l["sparrad"]:
+            return {"ok": False, "fel": "okänd"}
+        l["gaster"] = lista[: l["platser"] - 1]
+        return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"], "gaster": l["gaster"]}
 
 
 def slapp_in(kod, pin, antal):
@@ -60,7 +71,7 @@ def slapp_in(kod, pin, antal):
         r = rakna()
         if not l:
             return {"ok": False, "fel": "okänd", **r}
-        bas = {"namn": l["namn"], "platser": l["platser"], **r}
+        bas = {"namn": l["namn"], "platser": l["platser"], "gaster": l["gaster"], **r}
         if l["sparrad"]:
             return {"ok": False, "fel": "spärrad", **bas}
         kvar = l["platser"] - l["inne"]
@@ -119,6 +130,8 @@ class H(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         p = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+        if p.get("a") == "gaster":
+            return self._json(spara_gaster(str(p.get("k", "")), p.get("gaster")))
         if p.get("a") == "svar":
             return self._json(svara(str(p.get("k", "")), str(p.get("svar", ""))))
         if p.get("a") == "in":

@@ -50,7 +50,7 @@ const pers = n => n === 1 ? '1 person' : n + ' personer';
 function visaVal(id, s) {
   val.className = 'pa';
   val.querySelector('.stor').textContent = pers(s.kvar);
-  val.querySelector('.vem').textContent = s.namn;
+  val.querySelector('.vem').textContent = s.namn + (s.gaster && s.gaster.length ? ' + ' + s.gaster.join(', ') : '');
   val.querySelector('.mer').textContent = s.redan ? `${s.redan} av ${s.platser} är redan inne.` : `Biljetten gäller ${pers(s.platser)}.`;
   const k = val.querySelector('.knappar');
   k.replaceChildren(el('button', { class: 'alla', onclick: () => kontrollera(id, s.kvar) }, s.kvar === 1 ? 'Släpp in 1' : `Släpp in alla ${s.kvar}`));

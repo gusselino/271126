@@ -110,3 +110,9 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .rutor button:active{background:#c8f7c5;color:#050505;text-shadow:none}
 .term .tips:empty{display:none}
 .term .tips{margin-top:6px}
+.term .gastruta{margin:6px 0 4px}
+.term .gastfalt{display:block;width:100%;margin:8px 0 0;background:#050505;color:#eaffea;border:1px solid rgba(200,247,197,.55);font:inherit;font-size:16px;
+  text-transform:none;letter-spacing:0;padding:13px 10px;border-radius:0;text-shadow:inherit}
+.term .gastfalt::placeholder{color:rgba(200,247,197,.4)}
+.term .gastfalt:focus{outline:none;border-color:#eaffea}
+.term .gastknapp{margin-top:8px}

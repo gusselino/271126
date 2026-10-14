@@ -38,6 +38,9 @@ const T = {
     kanskeSvar: 'noterat: kanske. ingen biljett än. öppna samma länk igen när du vet, så får du svara på nytt.',
     nejSvar: 'noterat: nej. synd, du kommer att saknas. ändrar du dig går det bra att öppna länken igen.',
     tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
+    vem: n => n === 2 ? 'vem tar du med? förnamn och efternamn.' : 'vilka tar du med? förnamn och efternamn.',
+    valfritt: 'går att hoppa över och fylla i senare.', gast: i => `gäst ${i}`, sparaNamn: 'SPARA NAMNEN', hoppa: 'HOPPA ÖVER',
+    medDig: 'med dig', andraGaster: 'ÄNDRA NAMN PÅ GÄSTER', laggTill: 'LÄGG TILL NAMN PÅ GÄSTER', sparar: 'sparar ...',
     passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
     galler: n => n === 1 ? 'biljetten gäller 1 person.' : `biljetten gäller ${n} personer: dig och ${ANTAL_SV[n - 1] || n - 1} till.`,
@@ -65,6 +68,9 @@ const T = {
     kanskeSvar: 'noted: maybe. no ticket yet. open the same link again when you know, and answer again.',
     nejSvar: 'noted: no. too bad, you will be missed. if you change your mind, just open the link again.',
     tidigare: s => `your last answer: ${s}. you can answer again.`,
+    vem: n => n === 2 ? 'who are you bringing? first and last name.' : 'who are you bringing? first and last names.',
+    valfritt: 'you can skip this and fill it in later.', gast: i => `guest ${i}`, sparaNamn: 'SAVE NAMES', hoppa: 'SKIP',
+    medDig: 'with you', andraGaster: 'CHANGE GUEST NAMES', laggTill: 'ADD GUEST NAMES', sparar: 'saving ...',
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
     galler: n => n === 1 ? 'the ticket is valid for 1 person.' : `the ticket is valid for ${n} people: you and ${ANTAL_EN[n - 1] || n - 1} more.`,
@@ -188,6 +194,28 @@ function kommerDu() {
   });
 }
 
+// ---------------------------------------------------------------- namnen på plus-gästerna
+function gastFormular(ombord) {
+  return new Promise(klar => {
+    const n = lank.platser - 1, finns = lank.gaster || [];
+    const falt = Array.from({ length: n }, (_, i) => el('input', { class: 'gastfalt', placeholder: t().gast(i + 1), maxlength: '60', autocomplete: 'off', autocapitalize: 'words' }));
+    falt.forEach((f, i) => { f.value = finns[i] || ''; });
+    const fel = rad('', 'fel tips');
+    const spara = el('button', { onclick: async () => {
+      spara.disabled = true; fel.textContent = t().sparar;
+      try {
+        const s = await skicka({ a: 'gaster', k: kod, gaster: falt.map(f => f.value) });
+        if (!s.ok) throw new Error(s.fel);
+        lank.gaster = s.gaster; ruta.remove(); klar();
+      } catch (e) { fel.textContent = '> ' + t().kontakt; spara.disabled = false; }
+    } }, t().sparaNamn);
+    const ruta = el('div', { class: 'gastruta' }, rad('> ' + t().vem(lank.platser), 'stark'), rad('  ' + t().valfritt, 'svag'), ...falt,
+      el('div', { class: 'rutor' }, spara, el('button', { onclick: () => { ruta.remove(); klar(); } }, t().hoppa)), fel);
+    (ombord || m).append(ruta);
+    if (!ombord) botten();
+  });
+}
+
 async function laddaPasserkort() {
   snabbt = false;
   const svar = skicka({ a: 'svar', k: kod, svar: 'ja' });
@@ -204,7 +232,7 @@ async function laddaPasserkort() {
   }
   const s = await svar;
   if (!s.ok) throw new Error(s.fel);
-  lank = s;
+  lank = Object.assign(s, { gaster: lank.gaster });
   await vila(250);
   m.className = '';
   location.hash = 'kort';
@@ -272,6 +300,7 @@ function visaKort() {
     rad(t().pers(n), 'stor'),
     rad(`> ${lank.namn.toUpperCase()}${n > 1 ? ' ' + t().plus(n).toUpperCase() : ''}`),
     rad('> ' + t().galler(n)),
+    ...(lank.gaster && lank.gaster.length ? [rad(`> ${t().medDig}: ${lank.gaster.join(', ').toUpperCase()}`)] : []),
     ...(n > 1 ? [rad('> ' + t().samma), rad('> ' + t().skarm)] : []),
     rad(' '),
     rad('> ' + t().spara),
@@ -280,6 +309,7 @@ function visaKort() {
       el('button', { onclick: kalender }, t().kal),
       el('button', { onclick: mejla }, t().mejlknapp)),
     tips,
+    ...(n > 1 ? [el('div', { class: 'rutor gastknapp' }, el('button', { onclick: async e => { const plats = e.target.parentElement; plats.replaceChildren(); await gastFormular(plats); visaKort(); } }, (lank.gaster || []).length ? t().andraGaster : t().laggTill))] : []),
     el('button', { class: 'stor-knapp', onclick: () => { location.hash = 'info'; } }, `[ ${t().infoknapp} ]`));
   window.scrollTo(0, 0);
 }
@@ -331,7 +361,11 @@ async function start() {
   for (;;) {
     await skriv('> ' + t().kommer, 'stark');
     const v = await kommerDu();
-    try { if (v === 'ja') await laddaPasserkort(); else await svaraInte(v); break; }
+    try {
+      if (v === 'ja' && lank.platser > 1) await gastFormular();
+      if (v === 'ja') await laddaPasserkort(); else await svaraInte(v);
+      break;
+    }
     catch (e) { m.className = ''; await skriv('> ' + t().kontakt, 'fel'); }
   }
 }
