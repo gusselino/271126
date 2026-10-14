@@ -20,74 +20,116 @@ const ALDER = 25, LOGN = 29;   // det sanna svaret och det som ledtråden lurar 
 let lank = null, sprak = null, snabbt = false, klocka = null;
 try { sprak = localStorage.getItem('sprak'); } catch (e) {}
 
-const ANTAL_SV = ['', 'en', 'två', 'tre', 'fyra', 'fem'], ANTAL_EN = ['', 'one', 'two', 'three', 'four', 'five'];
+const SPRAK = ['sv', 'en', 'es', 'fr'];
+const TAL = { sv: ['', 'en', 'två', 'tre', 'fyra', 'fem'], en: ['', 'one', 'two', 'three', 'four', 'five'],
+  es: ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco'], fr: ['', 'une', 'deux', 'trois', 'quatre', 'cinq'] };
 const T = {
   sv: {
     ansluter: 'ansluter till 271126 ...', ok: 'ok',
     ingen: 'ingen inbjudan hittades.', stangt: 'stängt.', kontakt: 'ingen kontakt. ladda om sidan.',
     identitet: 'identitet', sallskap: 'sällskap',
     plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'personer'}`,
-    lana: 'gustav bergenudd vill låna ditt sällskap några timmar fredagen den 27 november.',
-    sakerhet: 'lite säkerhetsåtgärder, så att vi vet att det faktiskt är du som kommer.',
-    hamta: 'svara på frågan nedan för att hämta ditt passerkort.',
-    fraga: 'säkerhetsfråga: vad fyller gustav?', svar: 'svar',
-    aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.', fel: 'FEL.',
-    lur: 'ledtråd: gustav är faktiskt född 1997 och har i alla år ljugit om sin ålder. han fyller med andra ord 29. skriv 29 för att få din biljett.',
-    skriv29: 'FEL. skriv 29.', godkand: 'GODKÄND.', laddar: 'laddar passerkort',
-    kommer: 'en sista fråga. kommer du fredag 27 november?', ja: 'JA, JAG KOMMER', kanske: 'KANSKE', nej: 'NEJ, JAG KAN INTE',
-    kanskeSvar: 'noterat: kanske. ingen biljett än. öppna samma länk igen när du vet, så får du svara på nytt.',
+    lana: 'gustav vill låna ditt sällskap några timmar, fredag 27 november.',
+    fraga: 'kontrollfråga: vad fyller gustav?', svar: 'svar',
+    aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.',
+    lur: 'intressant. det är precis vad han vill att du ska tro. gustav är född 1997.',
+    skriv29: 'FEL. 2026 minus 1997.', godkand: 'RÄTT. han ser bra ut för sin ålder.', laddar: 'laddar passerkort',
+    kommer: 'en sista fråga. kommer du fredag 27 november?', ja: 'JA, JAG KOMMER', nej: 'NEJ, JAG KAN INTE',
     nejSvar: 'noterat: nej. synd, du kommer att saknas. ändrar du dig går det bra att öppna länken igen.',
     tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
     vem: n => n === 2 ? 'vem tar du med? förnamn och efternamn.' : 'vilka tar du med? förnamn och efternamn.',
     valfritt: 'går att hoppa över och fylla i senare.', gast: i => `gäst ${i}`, sparaNamn: 'SPARA NAMNEN', hoppa: 'HOPPA ÖVER',
-    villkorRad: 'villkor för ditt plus', gastlista: 'GÄSTLISTA', namnSaknas: 'namn saknas', enKod: 'en kod för er alla.', olikaTider: 'kommer ni vid olika tider? skicka en skärmbild av koden.',
-    medDig: 'med dig', andraGaster: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', laggTill: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', saknas: 'namn på dina gäster saknas.', sparar: 'sparar ...',
+    villkorRad: 'villkor för ditt plus', gastlista: 'GÄSTLISTA', namnSaknas: 'namn saknas', enKod: 'en kod för er alla.',
+    olikaTider: 'kommer ni vid olika tider? skicka en skärmbild av koden.', laggTill: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', sparar: 'sparar ...',
     passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
-    galler: n => n === 1 ? 'biljetten gäller 1 person.' : `biljetten gäller ${n} personer: dig och ${ANTAL_SV[n - 1] || n - 1} till.`,
-    samma: 'koden ovan gäller för er alla. kommer ni samtidigt räcker det att du visar den.',
-    skarm: 'kommer ni vid olika tider? skicka en skärmbild av koden till dem, så visar de den själva.',
+    galler: n => n === 1 ? 'biljetten gäller 1 person.' : `biljetten gäller ${n} personer: dig och ${TAL.sv[n - 1] || n - 1} till.`,
     spara: 'spara biljetten på något av följande sätt:', bild: 'SPARA SOM BILD', bildtips: 'välj ”spara bild” så hamnar den i bilder.',
-    kal: 'LÄGG IN I KALENDERN', mejlknapp: 'MEJLA TILL DIG SJÄLV',
-    infoknapp: 'INFO: PROGRAM, KARTA', tillbaka: 'TILLBAKA TILL PASSERKORTET',
+    kal: 'LÄGG IN I KALENDERN', infoknapp: 'INFO: PROGRAM, KARTA', tillbaka: 'TILLBAKA TILL PASSERKORTET',
     dag: 'fredag 27 november 2026', dorr: 'dörrarna öppnar', program: 'program', plats: 'plats',
-    kartor: '[öppna i kartor]', kartLaddar: '> laddar karta: gamla stan ...', kartSoker: 'söker', kartLast: 'position låst', kladsel: 'kom som dig själv.', kvar: 'startar om', nu: 'det är nu.',
-    amne: '271126 – mitt passerkort', mejltext: 'Mitt passerkort till fredag 27 november:',
+    kartor: '[öppna i kartor]', kartLaddar: '> laddar karta: gamla stan ...', kartSoker: 'söker', kartLast: 'position låst',
+    kladsel: 'kom som dig själv.', kvar: 'startar om', nu: 'det är nu.',
   },
   en: {
     ansluter: 'connecting to 271126 ...', ok: 'ok',
     ingen: 'no invitation found.', stangt: 'closed.', kontakt: 'no connection. reload the page.',
     identitet: 'identity', sallskap: 'guests',
     plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'people'}`,
-    lana: 'gustav bergenudd would like to borrow your company for a few hours on friday 27 november.',
-    sakerhet: 'a few security measures, so we know it is actually you coming.',
-    hamta: 'answer the question below to get your pass.',
+    lana: 'gustav would like to borrow your company for a few hours, friday 27 november.',
     fraga: 'security question: how old is gustav turning?', svar: 'answer',
-    aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.', fel: 'WRONG.',
-    lur: 'hint: gustav was actually born in 1997 and has lied about his age for years. in other words he is turning 29. enter 29 to get your ticket.',
-    skriv29: 'WRONG. enter 29.', godkand: 'ACCEPTED.', laddar: 'loading pass',
-    kommer: 'one last question. are you coming on friday 27 november?', ja: 'YES, I AM COMING', kanske: 'MAYBE', nej: 'NO, I CAN NOT',
-    kanskeSvar: 'noted: maybe. no ticket yet. open the same link again when you know, and answer again.',
+    aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.',
+    lur: 'interesting. that is exactly what he wants you to think. gustav was born in 1997.',
+    skriv29: 'WRONG. 2026 minus 1997.', godkand: 'CORRECT. he looks good for his age.', laddar: 'loading pass',
+    kommer: 'one last question. are you coming on friday 27 november?', ja: 'YES, I AM COMING', nej: 'NO, I CAN NOT',
     nejSvar: 'noted: no. too bad, you will be missed. if you change your mind, just open the link again.',
     tidigare: s => `your last answer: ${s}. you can answer again.`,
     vem: n => n === 2 ? 'who are you bringing? first and last name.' : 'who are you bringing? first and last names.',
     valfritt: 'you can skip this and fill it in later.', gast: i => `guest ${i}`, sparaNamn: 'SAVE NAMES', hoppa: 'SKIP',
-    villkorRad: 'condition for your plus', gastlista: 'GUEST LIST', namnSaknas: 'name missing', enKod: 'one code for all of you.', olikaTider: 'arriving at different times? send them a screenshot of the code.',
-    medDig: 'with you', andraGaster: 'ADD / CHANGE GUEST NAMES', laggTill: 'ADD / CHANGE GUEST NAMES', saknas: 'your guests have no names yet.', sparar: 'saving ...',
+    villkorRad: 'condition for your plus', gastlista: 'GUEST LIST', namnSaknas: 'name missing', enKod: 'one code for all of you.',
+    olikaTider: 'arriving at different times? send them a screenshot of the code.', laggTill: 'ADD / CHANGE GUEST NAMES', sparar: 'saving ...',
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
-    galler: n => n === 1 ? 'the ticket is valid for 1 person.' : `the ticket is valid for ${n} people: you and ${ANTAL_EN[n - 1] || n - 1} more.`,
-    samma: 'the code above works for all of you. if you arrive together, you show it once.',
-    skarm: 'arriving at different times? send them a screenshot of the code and they show it themselves.',
+    galler: n => n === 1 ? 'the ticket is valid for 1 person.' : `the ticket is valid for ${n} people: you and ${TAL.en[n - 1] || n - 1} more.`,
     spara: 'save your ticket in one of these ways:', bild: 'SAVE AS IMAGE', bildtips: 'choose “save image” to put it in photos.',
-    kal: 'ADD TO CALENDAR', mejlknapp: 'EMAIL IT TO YOURSELF',
-    infoknapp: 'INFO: LINE-UP, MAP', tillbaka: 'BACK TO YOUR PASS',
+    kal: 'ADD TO CALENDAR', infoknapp: 'INFO: LINE-UP, MAP', tillbaka: 'BACK TO YOUR PASS',
     dag: 'friday 27 november 2026', dorr: 'doors open', program: 'line-up', plats: 'location',
-    kartor: '[open in maps]', kartLaddar: '> loading map: gamla stan ...', kartSoker: 'scanning', kartLast: 'position locked', kladsel: 'come as yourself.', kvar: 'starts in', nu: 'it is now.',
-    amne: '271126 – my pass', mejltext: 'My pass for Friday 27 November:',
+    kartor: '[open in maps]', kartLaddar: '> loading map: gamla stan ...', kartSoker: 'scanning', kartLast: 'position locked',
+    kladsel: 'come as yourself.', kvar: 'starts in', nu: 'it is now.',
+  },
+  es: {
+    ansluter: 'conectando con 271126 ...', ok: 'ok',
+    ingen: 'no se encontró ninguna invitación.', stangt: 'cerrado.', kontakt: 'sin conexión. recarga la página.',
+    identitet: 'identidad', sallskap: 'acompañantes',
+    plus: n => `+ ${n - 1} ${n === 2 ? 'persona' : 'personas'}`,
+    lana: 'gustav quiere tomar prestada tu compañía unas horas, el viernes 27 de noviembre.',
+    fraga: 'pregunta de control: ¿cuántos años cumple gustav?', svar: 'respuesta',
+    aldre: 'MAL. es mayor.', yngre: 'MAL. es más joven.',
+    lur: 'interesante. eso es justo lo que él quiere que creas. gustav nació en 1997.',
+    skriv29: 'MAL. 2026 menos 1997.', godkand: 'CORRECTO. se conserva muy bien para su edad.', laddar: 'cargando pase',
+    kommer: 'una última pregunta. ¿vienes el viernes 27 de noviembre?', ja: 'SÍ, VOY', nej: 'NO, NO PUEDO',
+    nejSvar: 'anotado: no. qué pena, te echaremos de menos. si cambias de opinión, abre el enlace otra vez.',
+    tidigare: s => `tu última respuesta: ${s}. puedes responder de nuevo.`,
+    vem: n => n === 2 ? '¿a quién traes? nombre y apellido.' : '¿a quiénes traes? nombre y apellido.',
+    valfritt: 'puedes saltarlo y rellenarlo más tarde.', gast: i => `invitado ${i}`, sparaNamn: 'GUARDAR NOMBRES', hoppa: 'SALTAR',
+    villkorRad: 'condición para tu acompañante', gastlista: 'LISTA DE INVITADOS', namnSaknas: 'falta el nombre', enKod: 'un código para todos.',
+    olikaTider: '¿llegáis a distintas horas? envíales una captura del código.', laggTill: 'AÑADIR / CAMBIAR NOMBRES', sparar: 'guardando ...',
+    passerkort: 'PASE', info: 'INFO',
+    pers: n => n === 1 ? 'SOLO TÚ' : `TÚ + ${n - 1}`,
+    galler: n => n === 1 ? 'la entrada vale para 1 persona.' : `la entrada vale para ${n} personas: tú y ${TAL.es[n - 1] || n - 1} más.`,
+    spara: 'guarda tu entrada de una de estas formas:', bild: 'GUARDAR COMO IMAGEN', bildtips: 'elige “guardar imagen” para tenerla en fotos.',
+    kal: 'AÑADIR AL CALENDARIO', infoknapp: 'INFO: PROGRAMA, MAPA', tillbaka: 'VOLVER AL PASE',
+    dag: 'viernes 27 de noviembre de 2026', dorr: 'se abren las puertas', program: 'programa', plats: 'lugar',
+    kartor: '[abrir en mapas]', kartLaddar: '> cargando mapa: gamla stan ...', kartSoker: 'buscando', kartLast: 'posición fijada',
+    kladsel: 'ven como eres.', kvar: 'empieza en', nu: 'es ahora.',
+  },
+  fr: {
+    ansluter: 'connexion à 271126 ...', ok: 'ok',
+    ingen: 'aucune invitation trouvée.', stangt: 'fermé.', kontakt: 'pas de connexion. recharge la page.',
+    identitet: 'identité', sallskap: 'accompagnants',
+    plus: n => `+ ${n - 1} ${n === 2 ? 'personne' : 'personnes'}`,
+    lana: 'gustav aimerait emprunter ta compagnie quelques heures, vendredi 27 novembre.',
+    fraga: 'question de contrôle : quel âge va avoir gustav ?', svar: 'réponse',
+    aldre: 'FAUX. il est plus âgé.', yngre: 'FAUX. il est plus jeune.',
+    lur: 'intéressant. c’est exactement ce qu’il veut te faire croire. gustav est né en 1997.',
+    skriv29: 'FAUX. 2026 moins 1997.', godkand: 'CORRECT. il est bien conservé pour son âge.', laddar: 'chargement du pass',
+    kommer: 'une dernière question. tu viens vendredi 27 novembre ?', ja: 'OUI, JE VIENS', nej: 'NON, JE NE PEUX PAS',
+    nejSvar: 'noté : non. dommage, tu vas nous manquer. si tu changes d’avis, rouvre le lien.',
+    tidigare: s => `ta dernière réponse : ${s}. tu peux répondre à nouveau.`,
+    vem: n => n === 2 ? 'qui amènes-tu ? prénom et nom.' : 'qui amènes-tu ? prénoms et noms.',
+    valfritt: 'tu peux passer et le remplir plus tard.', gast: i => `invité ${i}`, sparaNamn: 'ENREGISTRER LES NOMS', hoppa: 'PASSER',
+    villkorRad: 'condition pour ton accompagnant', gastlista: 'LISTE DES INVITÉS', namnSaknas: 'nom manquant', enKod: 'un seul code pour vous tous.',
+    olikaTider: 'vous arrivez à des heures différentes ? envoie-leur une capture du code.', laggTill: 'AJOUTER / MODIFIER LES NOMS', sparar: 'enregistrement ...',
+    passerkort: 'PASS', info: 'INFO',
+    pers: n => n === 1 ? 'JUSTE TOI' : `TOI + ${n - 1}`,
+    galler: n => n === 1 ? 'le billet est valable pour 1 personne.' : `le billet est valable pour ${n} personnes : toi et ${TAL.fr[n - 1] || n - 1} autres.`,
+    spara: 'enregistre ton billet de l’une de ces façons :', bild: 'ENREGISTRER L’IMAGE', bildtips: 'choisis « enregistrer l’image » pour la garder dans photos.',
+    kal: 'AJOUTER AU CALENDRIER', infoknapp: 'INFO : PROGRAMME, PLAN', tillbaka: 'RETOUR AU PASS',
+    dag: 'vendredi 27 novembre 2026', dorr: 'ouverture des portes', program: 'programme', plats: 'lieu',
+    kartor: '[ouvrir dans plans]', kartLaddar: '> chargement du plan : gamla stan ...', kartSoker: 'recherche', kartLast: 'position verrouillée',
+    kladsel: 'viens comme tu es.', kvar: 'commence dans', nu: 'c’est maintenant.',
   },
 };
-const t = () => T[sprak || 'sv'];
+const t = () => T[SPRAK.includes(sprak) ? sprak : 'sv'];
 const akt = vad => vad === 'Dörrarna öppnar' ? t().dorr : vad.toUpperCase();
 
 // ---------------------------------------------------------------- terminalen skriver
@@ -168,11 +210,11 @@ async function byggKarta(k, status) {
 // ---------------------------------------------------------------- sida 1: inbjudan och frågan
 function valjSprak() {
   return new Promise(klar => {
-    const r = el('div', { class: 'l val' }, '> språk / language: ',
-      ...['sv', 'en'].map(s => el('button', { onclick: () => {
+    const r = el('div', { class: 'l val' }, '> språk / language / idioma / langue: ',
+      ...SPRAK.map(s => el('button', { onclick: () => {
         sprak = s; try { localStorage.setItem('sprak', s); } catch (e) {}
         document.documentElement.lang = s;
-        r.replaceChildren('> språk / language: ' + s); klar();
+        r.replaceChildren('> språk / language / idioma / langue: ' + s); klar();
       } }, `[${s}]`)));
     m.append(r); botten();
   });
@@ -183,9 +225,6 @@ async function inbjudan() {
   if (lank.platser > 1) await skriv(`> ${t().sallskap}: ${t().plus(lank.platser)}${lank.villkor ? ' (' + lank.villkor + ')' : ''}`);
   tom();
   await skriv('> ' + t().lana);
-  tom();
-  await skriv('> ' + t().sakerhet);
-  await skriv('> ' + t().hamta);
   tom();
   await skriv('> ' + t().fraga, 'stark');
   return fragan();
@@ -206,7 +245,7 @@ function fragan() {
       const svar = Number(v); v = '';
       if (!lurad && svar === ALDER) {
         lurad = true; skaka();
-        fel.textContent = '> ' + t().fel; ledtrad.textContent = '> ' + t().lur;
+        fel.textContent = '\u00a0'; ledtrad.textContent = '> ' + t().lur;
         return setTimeout(() => { rita(); botten(); }, 600);
       }
       if (svar !== LOGN || !lurad) {
@@ -232,7 +271,7 @@ function fragan() {
 function kommerDu() {
   return new Promise(klar => {
     const knappar = el('div', { class: 'rutor' },
-      ...['ja', 'kanske', 'nej'].map(v => el('button', { onclick: () => { knappar.remove(); klar(v); } }, t()[v])));
+      ...['ja', 'nej'].map(v => el('button', { onclick: () => { knappar.remove(); klar(v); } }, t()[v])));
     m.append(knappar); botten();
   });
 }
@@ -285,7 +324,7 @@ async function svaraInte(v) {
   if (!s.ok) throw new Error(s.fel);
   lank = s;
   tom();
-  await skriv('> ' + (v === 'kanske' ? t().kanskeSvar : t().nejSvar), 'stark');
+  await skriv('> ' + t().nejSvar, 'stark');
 }
 
 // ---------------------------------------------------------------- sida 2: passerkortet
@@ -327,10 +366,10 @@ const lankAdress = () => location.origin + location.pathname + location.search;
 const kalender = () => /iPhone|iPad|Macintosh/.test(navigator.userAgent) ? (location.href = '271126.ics') : googleKalender();
 const googleKalender = () => window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=271126&dates=20261127T210000Z/20261128T030000Z'
   + '&location=' + encodeURIComponent(FEST.adress + ', ' + FEST.plats) + '&details=' + encodeURIComponent(lankAdress()), '_blank', 'noopener');
-const mejla = () => { location.href = 'mailto:?subject=' + encodeURIComponent(t().amne) + '&body=' + encodeURIComponent(t().mejltext + '\n' + lankAdress()); };
 
 const topp = (titel, knapp) => el('div', { class: 'l topp' }, el('span', {}, `271126 // ${titel}`), knapp);
-const sprakknapp = rita => el('button', { onclick: () => { sprak = sprak === 'en' ? 'sv' : 'en'; try { localStorage.setItem('sprak', sprak); } catch (e) {} rita(); } }, sprak === 'en' ? '[sv]' : '[en]');
+const nastaSprak = () => SPRAK[(SPRAK.indexOf(sprak) + 1) % SPRAK.length];
+const sprakknapp = rita => el('button', { onclick: () => { sprak = nastaSprak(); try { localStorage.setItem('sprak', sprak); } catch (e) {} rita(); } }, `[${nastaSprak()}]`);
 
 function visaKort() {
   clearInterval(klocka);
@@ -354,8 +393,7 @@ function visaKort() {
     rad('> ' + t().spara),
     el('div', { class: 'rutor' },
       el('button', { onclick: () => sparaBild(tips) }, t().bild),
-      el('button', { onclick: kalender }, t().kal),
-      el('button', { onclick: mejla }, t().mejlknapp)),
+      el('button', { onclick: kalender }, t().kal)),
     tips,
     el('button', { class: 'stor-knapp gron', onclick: () => { location.hash = 'info'; } }, `[ ${t().infoknapp} ]`));
   window.scrollTo(0, 0);
@@ -396,13 +434,14 @@ async function start() {
   if (!API) return skriv('> ' + T.sv.stangt, 'svag');
   const hamtat = hamta({ a: 'l', k: kod }).catch(() => null);
   if (!sprak) await valjSprak();
-  await skriv('> ' + t().ansluter);
+  const anslut = await skriv('> ' + t().ansluter);
   lank = await hamtat;
   if (!lank) return skriv('> ' + t().kontakt, 'fel');
   if (!lank.ok) return skriv('> ' + t().ingen, 'svag');
-  await skriv('> ' + t().ok);
+  anslut.append(' ' + t().ok);
+  await vila(300);
   if (lank.svar === 'ja') { await vila(250); location.hash = 'kort'; return visaSida(); }
-  if (lank.svar) await skriv('> ' + t().tidigare(lank.svar), 'svag');
+  if (lank.svar) await skriv('> ' + t().tidigare(t()[lank.svar] || lank.svar), 'svag');
   await inbjudan();
   await skriv('> ' + t().godkand, 'stark');
   for (;;) {
