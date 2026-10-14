@@ -39,7 +39,7 @@ const T = {
     tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
     vem: n => n === 2 ? 'vem tar du med? förnamn och efternamn.' : 'vilka tar du med? förnamn och efternamn.',
     valfritt: 'går att hoppa över och fylla i senare.', gast: i => `gäst ${i}`, sparaNamn: 'SPARA NAMNEN', hoppa: 'HOPPA ÖVER',
-    villkorRad: 'villkor för ditt plus', gastlista: 'GÄSTLISTA', namnSaknas: 'namn saknas', enKod: 'en kod för er alla.',
+    villkorRad: 'villkor för ditt plus', gastlista: 'PÅ DIN BILJETT', namnSaknas: 'namn saknas', enKod: 'en kod för er alla.',
     olikaTider: 'kommer ni vid olika tider? skicka en skärmbild av koden.', laggTill: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', sparar: 'sparar ...',
     passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
@@ -66,7 +66,7 @@ const T = {
     tidigare: s => `your last answer: ${s}. you can answer again.`,
     vem: n => n === 2 ? 'who are you bringing? first and last name.' : 'who are you bringing? first and last names.',
     valfritt: 'you can skip this and fill it in later.', gast: i => `guest ${i}`, sparaNamn: 'SAVE NAMES', hoppa: 'SKIP',
-    villkorRad: 'condition for your plus', gastlista: 'GUEST LIST', namnSaknas: 'name missing', enKod: 'one code for all of you.',
+    villkorRad: 'condition for your plus', gastlista: 'ON YOUR TICKET', namnSaknas: 'name missing', enKod: 'one code for all of you.',
     olikaTider: 'arriving at different times? send them a screenshot of the code.', laggTill: 'ADD / CHANGE GUEST NAMES', sparar: 'saving ...',
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
@@ -93,7 +93,7 @@ const T = {
     tidigare: s => `tu última respuesta: ${s}. puedes responder de nuevo.`,
     vem: n => n === 2 ? '¿a quién traes? nombre y apellido.' : '¿a quiénes traes? nombre y apellido.',
     valfritt: 'puedes saltarlo y rellenarlo más tarde.', gast: i => `invitado ${i}`, sparaNamn: 'GUARDAR NOMBRES', hoppa: 'SALTAR',
-    villkorRad: 'condición para tu acompañante', gastlista: 'LISTA DE INVITADOS', namnSaknas: 'falta el nombre', enKod: 'un código para todos.',
+    villkorRad: 'condición para tu acompañante', gastlista: 'EN TU ENTRADA', namnSaknas: 'falta el nombre', enKod: 'un código para todos.',
     olikaTider: '¿llegáis a distintas horas? envíales una captura del código.', laggTill: 'AÑADIR / CAMBIAR NOMBRES', sparar: 'guardando ...',
     passerkort: 'PASE', info: 'INFO',
     pers: n => n === 1 ? 'SOLO TÚ' : `TÚ + ${n - 1}`,
@@ -120,7 +120,7 @@ const T = {
     tidigare: s => `ta dernière réponse : ${s}. tu peux répondre à nouveau.`,
     vem: n => n === 2 ? 'qui amènes-tu ? prénom et nom.' : 'qui amènes-tu ? prénoms et noms.',
     valfritt: 'tu peux passer et le remplir plus tard.', gast: i => `invité ${i}`, sparaNamn: 'ENREGISTRER LES NOMS', hoppa: 'PASSER',
-    villkorRad: 'condition pour ton accompagnant', gastlista: 'LISTE DES INVITÉS', namnSaknas: 'nom manquant', enKod: 'un seul code pour vous tous.',
+    villkorRad: 'condition pour ton accompagnant', gastlista: 'SUR TON BILLET', namnSaknas: 'nom manquant', enKod: 'un seul code pour vous tous.',
     olikaTider: 'vous arrivez à des heures différentes ? envoie-leur une capture du code.', laggTill: 'AJOUTER / MODIFIER LES NOMS', sparar: 'enregistrement ...',
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUSTE TOI' : `TOI + ${n - 1}`,
@@ -169,7 +169,10 @@ function karta(bygg) {
   const k = el('div', { class: 'karta' + (bygg ? ' bygger' : '') });
   k.innerHTML = KARTA;   // fast teckning ur karta.js, inget som kommer utifrån
   const status = el('div', { class: 'l kstatus' }, bygg ? '' : '\u00a0');
-  k.append(status, el('a', { href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(FEST.adress + ', ' + FEST.plats), target: '_blank', rel: 'noopener' }, t().kartor),
+  const adr = encodeURIComponent(FEST.adress + ', ' + FEST.plats);
+  // iPhone och Mac öppnar Apple Kartor, övriga Google Maps
+  const kartlank = /iPhone|iPad|Macintosh/.test(navigator.userAgent) ? 'https://maps.apple.com/?q=' + adr : 'https://www.google.com/maps/search/?api=1&query=' + adr;
+  k.append(status, el('a', { href: kartlank, target: '_blank', rel: 'noopener' }, t().kartor),
            el('span', { class: 'svag' }, ' © OpenStreetMap'));
   if (bygg) requestAnimationFrame(() => byggKarta(k, status));
   return k;
@@ -254,8 +257,9 @@ function fragan() {
         fel.textContent = '\u00a0'; ledtrad.textContent = '> ' + t().lur;
         return setTimeout(() => { rita(); botten(); }, 600);
       }
-      if (svar !== LOGN || !lurad) {
-        fel.textContent = '> ' + (lurad ? t().skriv29 : svar < ALDER ? t().aldre : t().yngre);
+      // 29 går alltid igenom, även direkt, så den som kommer tillbaka slipper hela leken
+      if (svar !== LOGN) {
+        fel.textContent = '> ' + (lurad ? t().skriv29 : svar < LOGN ? t().aldre : t().yngre);
         return setTimeout(rita, 450);
       }
       last = true; document.removeEventListener('keydown', tangent);
