@@ -105,3 +105,8 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .knapprad button{padding:9px 4px;margin:-9px 0}
 .term .knapprad button:active,.term .stor-knapp:active{background:#c8f7c5;color:#050505;text-shadow:none}
 .term .stor-knapp{display:block;width:100%;margin-top:22px;padding:18px 10px;border:1px solid #c8f7c5;font-size:15px;letter-spacing:.06em}
+.term .rutor{display:grid;gap:8px;margin:8px 0 0}
+.term .rutor button{width:100%;padding:14px 10px;border:1px solid rgba(200,247,197,.55);text-align:left;letter-spacing:.04em}
+.term .rutor button:active{background:#c8f7c5;color:#050505;text-shadow:none}
+.term .tips:empty{display:none}
+.term .tips{margin-top:6px}

@@ -35,14 +35,14 @@ const T = {
     lur: 'ledtråd: gustav är faktiskt född 1997 och har i alla år ljugit om sin ålder. han fyller med andra ord 29. skriv 29 för att få din biljett.',
     skriv29: 'FEL. skriv 29.', godkand: 'GODKÄND. välkommen.', laddar: 'laddar passerkort',
     passerkort: 'PASSERKORT', info: 'INFO',
-    pers: n => n === 1 ? '1 PERSON' : `${n} PERSONER`,
-    galler: n => n === 1 ? 'gäller bara dig.' : `gäller dig och ${ANTAL_SV[n - 1] || n - 1} till.`,
+    pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
+    galler: n => n === 1 ? 'biljetten gäller 1 person.' : `biljetten gäller ${n} personer: dig och ${ANTAL_SV[n - 1] || n - 1} till.`,
     samma: 'ni visar samma kod i dörren.', skarm: 'kommer ni inte samtidigt? skicka en skärmbild av koden.',
-    spara: 'spara', bild: '[bild]', bildtips: 'välj ”spara bild” så hamnar den i bilder.',
-    kalender: 'kalender', apple: '[apple]', google: '[google]', mejl: 'mejla till dig själv', mejlknapp: '[mejl]',
+    spara: 'spara biljetten på något av följande sätt:', bild: 'SPARA SOM BILD', bildtips: 'välj ”spara bild” så hamnar den i bilder.',
+    kal: 'LÄGG IN I KALENDERN', mejlknapp: 'MEJLA TILL DIG SJÄLV',
     infoknapp: 'INFO: PROGRAM, KARTA', tillbaka: 'TILLBAKA TILL PASSERKORTET',
     dag: 'fredag 27 november 2026', dorr: 'dörrarna öppnar', program: 'program', plats: 'plats',
-    kartor: '[öppna i kartor]', kladsel: 'kom som dig själv.', kvar: 'öppnar om', nu: 'öppet nu.',
+    kartor: '[öppna i kartor]', kladsel: 'kom som dig själv.', kvar: 'startar om', nu: 'det är nu.',
     amne: '271126 – mitt passerkort', mejltext: 'Mitt passerkort till fredag 27 november:',
   },
   en: {
@@ -58,14 +58,14 @@ const T = {
     lur: 'hint: gustav was actually born in 1997 and has lied about his age for years. in other words he is turning 29. enter 29 to get your ticket.',
     skriv29: 'WRONG. enter 29.', godkand: 'ACCEPTED. welcome.', laddar: 'loading pass',
     passerkort: 'PASS', info: 'INFO',
-    pers: n => n === 1 ? '1 PERSON' : `${n} PEOPLE`,
-    galler: n => n === 1 ? 'valid for you only.' : `valid for you and ${ANTAL_EN[n - 1] || n - 1} more.`,
+    pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
+    galler: n => n === 1 ? 'the ticket is valid for 1 person.' : `the ticket is valid for ${n} people: you and ${ANTAL_EN[n - 1] || n - 1} more.`,
     samma: 'you all show the same code at the door.', skarm: 'not arriving together? send them a screenshot of the code.',
-    spara: 'save', bild: '[image]', bildtips: 'choose “save image” to put it in photos.',
-    kalender: 'calendar', apple: '[apple]', google: '[google]', mejl: 'email it to yourself', mejlknapp: '[email]',
+    spara: 'save your ticket in one of these ways:', bild: 'SAVE AS IMAGE', bildtips: 'choose “save image” to put it in photos.',
+    kal: 'ADD TO CALENDAR', mejlknapp: 'EMAIL IT TO YOURSELF',
     infoknapp: 'INFO: LINE-UP, MAP', tillbaka: 'BACK TO YOUR PASS',
     dag: 'friday 27 november 2026', dorr: 'doors open', program: 'line-up', plats: 'location',
-    kartor: '[open in maps]', kladsel: 'come as yourself.', kvar: 'doors in', nu: 'open now.',
+    kartor: '[open in maps]', kladsel: 'come as yourself.', kvar: 'starts in', nu: 'it is now.',
     amne: '271126 – my pass', mejltext: 'My pass for Friday 27 November:',
   },
 };
@@ -229,7 +229,8 @@ async function sparaBild(tips) {
 }
 
 const lankAdress = () => location.origin + location.pathname + location.search;
-const appleKalender = () => { location.href = '271126.ics'; };
+// iPhone, iPad och Mac öppnar kalenderfilen i sin egen kalender. Övriga (Android) får Google Kalender.
+const kalender = () => /iPhone|iPad|Macintosh/.test(navigator.userAgent) ? (location.href = '271126.ics') : googleKalender();
 const googleKalender = () => window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=271126&dates=20261127T210000Z/20261128T030000Z'
   + '&location=' + encodeURIComponent(FEST.adress + ', ' + FEST.plats) + '&details=' + encodeURIComponent(lankAdress()), '_blank', 'noopener');
 const mejla = () => { location.href = 'mailto:?subject=' + encodeURIComponent(t().amne) + '&body=' + encodeURIComponent(t().mejltext + '\n' + lankAdress()); };
@@ -239,7 +240,7 @@ const sprakknapp = rita => el('button', { onclick: () => { sprak = sprak === 'en
 
 function visaKort() {
   clearInterval(klocka);
-  const n = lank.platser, tips = rad('', 'svag');
+  const n = lank.platser, tips = el('div', { class: 'l svag tips' });
   m.className = 'ny';
   m.replaceChildren(
     topp(t().passerkort, sprakknapp(visaKort)),
@@ -249,10 +250,12 @@ function visaKort() {
     rad('> ' + t().galler(n)),
     ...(n > 1 ? [rad('> ' + t().samma), rad('> ' + t().skarm)] : []),
     rad(' '),
-    el('div', { class: 'l knapprad' }, `> ${t().spara}: `, el('button', { onclick: () => sparaBild(tips) }, t().bild)),
+    rad('> ' + t().spara),
+    el('div', { class: 'rutor' },
+      el('button', { onclick: () => sparaBild(tips) }, t().bild),
+      el('button', { onclick: kalender }, t().kal),
+      el('button', { onclick: mejla }, t().mejlknapp)),
     tips,
-    el('div', { class: 'l knapprad' }, `> ${t().kalender}: `, el('button', { onclick: appleKalender }, t().apple), ' ', el('button', { onclick: googleKalender }, t().google)),
-    el('div', { class: 'l knapprad' }, `> ${t().mejl}: `, el('button', { onclick: mejla }, t().mejlknapp)),
     el('button', { class: 'stor-knapp', onclick: () => { location.hash = 'info'; } }, `[ ${t().infoknapp} ]`));
   window.scrollTo(0, 0);
 }
