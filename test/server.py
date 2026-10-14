@@ -18,10 +18,10 @@ PIN = "1234"
 
 def ny():
     return {
-        "solo1111": {"namn": "Anna Test", "platser": 1, "sparrad": False, "ja": None, "inne": 0, "senast": None},
-        "plus1111": {"namn": "Erik Test", "platser": 2, "sparrad": False, "ja": None, "inne": 0, "senast": None},
-        "plus2222": {"namn": "Maja Test", "platser": 3, "sparrad": False, "ja": None, "inne": 0, "senast": None},
-        "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "ja": None, "inne": 0, "senast": None},
+        "solo1111": {"namn": "Anna Test", "platser": 1, "sparrad": False, "svar": "", "inne": 0, "senast": None},
+        "plus1111": {"namn": "Erik Test", "platser": 2, "sparrad": False, "svar": "", "inne": 0, "senast": None},
+        "plus2222": {"namn": "Maja Test", "platser": 3, "sparrad": False, "svar": "", "inne": 0, "senast": None},
+        "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "svar": "", "inne": 0, "senast": None},
     }
 
 
@@ -31,23 +31,25 @@ LAS = threading.Lock()
 
 def rakna():
     return {"inne": sum(l["inne"] for l in LANKAR.values()),
-            "totalt": sum(l["platser"] for l in LANKAR.values() if l["ja"] and not l["sparrad"])}
+            "totalt": sum(l["platser"] for l in LANKAR.values() if l["svar"] == "ja" and not l["sparrad"])}
 
 
 def visa(kod):
     l = LANKAR.get(kod)
     if not l or l["sparrad"]:
         return {"ok": False, "fel": "okänd"}
-    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "ja": bool(l["ja"])}
+    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"]}
 
 
-def tacka_ja(kod):
+def svara(kod, svar):
+    if svar not in ("ja", "kanske", "nej"):
+        return {"ok": False, "fel": "svar"}
     with LAS:
         l = LANKAR.get(kod)
         if not l or l["sparrad"]:
             return {"ok": False, "fel": "okänd"}
-        l["ja"] = l["ja"] or datetime.now().isoformat()
-        return {"ok": True, "namn": l["namn"], "platser": l["platser"], "ja": True}
+        l["svar"] = svar
+        return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": svar}
 
 
 def slapp_in(kod, pin, antal):
@@ -117,8 +119,8 @@ class H(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         p = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-        if p.get("a") == "ja":
-            return self._json(tacka_ja(str(p.get("k", ""))))
+        if p.get("a") == "svar":
+            return self._json(svara(str(p.get("k", "")), str(p.get("svar", ""))))
         if p.get("a") == "in":
             return self._json(slapp_in(str(p.get("b", "")), p.get("pin"), p.get("antal")))
         if p.get("a") == "lage":

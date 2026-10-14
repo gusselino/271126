@@ -2,7 +2,7 @@
  * 271126 – baksidan. Ligger som Apps Script i kalkylarket "271126 gästlista".
  *
  * Flikar:
- *   Länkar         A kod | B namn | C platser | D spärrad | E länk | F tackat ja | G inne | H senast insläppt
+ *   Länkar         A kod | B namn | C platser | D spärrad | E länk | F svar (ja/kanske/nej) | G inne | H senast insläppt | I svarade
  *   Inställningar  A1 "PIN" | B1 vaktens kod
  *
  * En rad = en inbjudan = en biljett. "platser" är hur många personer biljetten gäller för
@@ -14,7 +14,8 @@
 
 const SAJT = 'https://271126.com/';
 const TECKEN = 'abcdefghjkmnpqrstuvwxyz23456789'; // inga förväxlingsbara tecken
-const K = { kod: 1, namn: 2, platser: 3, sparrad: 4, lank: 5, ja: 6, inne: 7, senast: 8 };
+const K = { kod: 1, namn: 2, platser: 3, sparrad: 4, lank: 5, svar: 6, inne: 7, senast: 8, svarade: 9 };
+const SVAR = ['ja', 'kanske', 'nej'];
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('271126')
@@ -25,7 +26,7 @@ function onOpen() {
 function installera() {
   const ss = SpreadsheetApp.getActive();
   const s = ss.getSheetByName('Länkar') || ss.insertSheet('Länkar');
-  if (s.getLastRow() === 0) s.appendRow(['kod', 'namn', 'platser', 'spärrad', 'länk', 'tackat ja', 'inne', 'senast insläppt']);
+  if (s.getLastRow() === 0) s.appendRow(['kod', 'namn', 'platser', 'spärrad', 'länk', 'svar', 'inne', 'senast insläppt', 'svarade']);
   s.setFrozenRows(1);
   const inst = ss.getSheetByName('Inställningar') || ss.insertSheet('Inställningar');
   if (!inst.getRange('B1').getValue()) {
@@ -62,7 +63,7 @@ function blad() { return SpreadsheetApp.getActive().getSheetByName('Länkar'); }
 function allaLankar() {
   return blad().getDataRange().getValues().slice(1).map((r, i) => ({
     rad: i + 2, kod: String(r[0]), namn: String(r[1]), platser: Math.max(1, Number(r[2]) || 1),
-    sparrad: !!r[3], ja: r[5] ? r[5] : null, inne: Number(r[6]) || 0, senast: r[7] ? r[7] : null,
+    sparrad: !!r[3], svar: SVAR.indexOf(String(r[5])) >= 0 ? String(r[5]) : '', inne: Number(r[6]) || 0, senast: r[7] ? r[7] : null,
   })).filter(l => l.kod);
 }
 
@@ -79,7 +80,7 @@ function klockslag(d) { return Utilities.formatDate(new Date(d), 'Europe/Stockho
 function rakna(alla) {
   return {
     inne: alla.reduce((s, l) => s + l.inne, 0),
-    totalt: alla.filter(l => l.ja && !l.sparrad).reduce((s, l) => s + l.platser, 0),
+    totalt: alla.filter(l => l.svar === 'ja' && !l.sparrad).reduce((s, l) => s + l.platser, 0),
   };
 }
 
@@ -88,17 +89,21 @@ function rakna(alla) {
 function visaLank(kod) {
   const l = lasLank(kod);
   if (!l || l.sparrad) return { ok: false, fel: 'okänd' };
-  return { ok: true, namn: l.namn, platser: l.platser, ja: !!l.ja };
+  return { ok: true, namn: l.namn, platser: l.platser, svar: l.svar };
 }
 
-function tackaJa(kod) {
+/** Gästens svar. Kan ändras hur många gånger som helst; senaste svaret gäller. */
+function svara(kod, svar) {
+  if (SVAR.indexOf(svar) < 0) return { ok: false, fel: 'svar' };
   const las = LockService.getScriptLock();
   las.waitLock(20000);
   try {
     const l = lasLank(kod);
     if (!l || l.sparrad) return { ok: false, fel: 'okänd' };
-    if (!l.ja) { blad().getRange(l.rad, K.ja).setValue(new Date()); SpreadsheetApp.flush(); }
-    return { ok: true, namn: l.namn, platser: l.platser, ja: true };
+    blad().getRange(l.rad, K.svar).setValue(svar);
+    blad().getRange(l.rad, K.svarade).setValue(new Date());
+    SpreadsheetApp.flush();
+    return { ok: true, namn: l.namn, platser: l.platser, svar: svar };
   } finally { las.releaseLock(); }
 }
 
@@ -123,7 +128,7 @@ function slappIn(kod, pin, antal) {
     if (!n && l.platser === 1) n = 1;
     if (!n) return Object.assign({ ok: true, klar: false, redan: l.inne, kvar: kvar }, bas);
     if (n < 1 || n > kvar || n !== Math.floor(n)) return Object.assign({ ok: false, fel: 'antal', kvar: kvar }, bas);
-    blad().getRange(l.rad, K.inne, 1, 2).setValues([[l.inne + n, new Date()]]);
+    blad().getRange(l.rad, K.inne, 1, 2).setValues([[l.inne + n, new Date()]]);  // inne, senast insläppt
     SpreadsheetApp.flush();
     return Object.assign({ ok: true, klar: true, antal: n, kvar: kvar - n }, bas, { inne: r.inne + n });
   } finally { las.releaseLock(); }
@@ -153,7 +158,7 @@ function doGet(e) {
 function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents || '{}');
-    if (p.a === 'ja') return svar(tackaJa(String(p.k || '')));
+    if (p.a === 'svar') return svar(svara(String(p.k || ''), String(p.svar || '')));
     if (p.a === 'in') return svar(slappIn(String(p.b || ''), p.pin, p.antal));
     if (p.a === 'lage') return svar(lage(p.pin));
     return svar({ ok: false, fel: 'fråga' });

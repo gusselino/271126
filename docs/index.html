@@ -33,7 +33,11 @@ const T = {
     fraga: 'säkerhetsfråga: vad fyller gustav?', svar: 'svar',
     aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.', fel: 'FEL.',
     lur: 'ledtråd: gustav är faktiskt född 1997 och har i alla år ljugit om sin ålder. han fyller med andra ord 29. skriv 29 för att få din biljett.',
-    skriv29: 'FEL. skriv 29.', godkand: 'GODKÄND. välkommen.', laddar: 'laddar passerkort',
+    skriv29: 'FEL. skriv 29.', godkand: 'GODKÄND.', laddar: 'laddar passerkort',
+    kommer: 'en sista fråga. kommer du fredag 27 november?', ja: 'JA, JAG KOMMER', kanske: 'KANSKE', nej: 'NEJ, JAG KAN INTE',
+    kanskeSvar: 'noterat: kanske. ingen biljett än. öppna samma länk igen när du vet, så får du svara på nytt.',
+    nejSvar: 'noterat: nej. synd, du kommer att saknas. ändrar du dig går det bra att öppna länken igen.',
+    tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
     passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
     galler: n => n === 1 ? 'biljetten gäller 1 person.' : `biljetten gäller ${n} personer: dig och ${ANTAL_SV[n - 1] || n - 1} till.`,
@@ -56,7 +60,11 @@ const T = {
     fraga: 'security question: how old is gustav turning?', svar: 'answer',
     aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.', fel: 'WRONG.',
     lur: 'hint: gustav was actually born in 1997 and has lied about his age for years. in other words he is turning 29. enter 29 to get your ticket.',
-    skriv29: 'WRONG. enter 29.', godkand: 'ACCEPTED. welcome.', laddar: 'loading pass',
+    skriv29: 'WRONG. enter 29.', godkand: 'ACCEPTED.', laddar: 'loading pass',
+    kommer: 'one last question. are you coming on friday 27 november?', ja: 'YES, I AM COMING', kanske: 'MAYBE', nej: 'NO, I CAN NOT',
+    kanskeSvar: 'noted: maybe. no ticket yet. open the same link again when you know, and answer again.',
+    nejSvar: 'noted: no. too bad, you will be missed. if you change your mind, just open the link again.',
+    tidigare: s => `your last answer: ${s}. you can answer again.`,
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
     galler: n => n === 1 ? 'the ticket is valid for 1 person.' : `the ticket is valid for ${n} people: you and ${ANTAL_EN[n - 1] || n - 1} more.`,
@@ -171,10 +179,18 @@ function fragan() {
 }
 
 // ---------------------------------------------------------------- övergången: skärmen töms och passerkortet laddas
+// ---------------------------------------------------------------- frågan om man kommer
+function kommerDu() {
+  return new Promise(klar => {
+    const knappar = el('div', { class: 'rutor' },
+      ...['ja', 'kanske', 'nej'].map(v => el('button', { onclick: () => { knappar.remove(); klar(v); } }, t()[v])));
+    m.append(knappar); botten();
+  });
+}
+
 async function laddaPasserkort() {
   snabbt = false;
-  await skriv('> ' + t().godkand, 'stark');
-  const svar = skicka({ a: 'ja', k: kod });
+  const svar = skicka({ a: 'svar', k: kod, svar: 'ja' });
   await vila(500);
   m.className = 'slack';
   await vila(350);
@@ -192,6 +208,14 @@ async function laddaPasserkort() {
   await vila(250);
   m.className = '';
   location.hash = 'kort';
+}
+
+async function svaraInte(v) {
+  const s = await skicka({ a: 'svar', k: kod, svar: v });
+  if (!s.ok) throw new Error(s.fel);
+  lank = s;
+  tom();
+  await skriv('> ' + (v === 'kanske' ? t().kanskeSvar : t().nejSvar), 'stark');
 }
 
 // ---------------------------------------------------------------- sida 2: passerkortet
@@ -284,7 +308,7 @@ function visaInfo() {
 
 // ---------------------------------------------------------------- start och navigering
 function visaSida() {
-  if (!lank || !lank.ja) return;
+  if (!lank || lank.svar !== 'ja') return;
   if (location.hash === '#info') visaInfo(); else visaKort();
 }
 window.addEventListener('hashchange', visaSida);
@@ -300,11 +324,15 @@ async function start() {
   if (!lank) return skriv('> ' + t().kontakt, 'fel');
   if (!lank.ok) return skriv('> ' + t().ingen, 'svag');
   await skriv('> ' + t().ok);
-  if (lank.ja) { await vila(250); location.hash = 'kort'; return visaSida(); }
+  if (lank.svar === 'ja') { await vila(250); location.hash = 'kort'; return visaSida(); }
+  if (lank.svar) await skriv('> ' + t().tidigare(lank.svar), 'svag');
   await inbjudan();
+  await skriv('> ' + t().godkand, 'stark');
   for (;;) {
-    try { await laddaPasserkort(); break; }
-    catch (e) { m.className = ''; await skriv('> ' + t().kontakt, 'fel'); await fragan(); }
+    await skriv('> ' + t().kommer, 'stark');
+    const v = await kommerDu();
+    try { if (v === 'ja') await laddaPasserkort(); else await svaraInte(v); break; }
+    catch (e) { m.className = ''; await skriv('> ' + t().kontakt, 'fel'); }
   }
 }
 if (location.hash) history.replaceState(null, '', location.pathname + location.search);
