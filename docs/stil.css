@@ -140,3 +140,4 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .bildvy button{border:1px solid rgba(200,247,197,.55);padding:14px;width:100%;max-width:420px;align-self:center}
 .term .stor-fraga{font-size:26px;line-height:1.25;color:#eaffea;text-shadow:0 0 12px rgba(150,255,170,.6);margin-bottom:18px}
 .term main.ny{animation:none}
+.term .nytt-steg{margin:34px 0 14px;border-top:1px dashed rgba(200,247,197,.35);scroll-margin-top:20px}

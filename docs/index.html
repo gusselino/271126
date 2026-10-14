@@ -30,9 +30,9 @@ const T = {
     identitet: 'identitet', sallskap: 'sällskap',
     plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'personer'}`,
     lana: 'gustav vill låna ditt sällskap några timmar, fredag 27 november.',
-    fraga: 'kontrollfråga: vad fyller gustav?', svar: 'svar',
+    sakerhet: 'först en säkerhetsåtgärd, så att vi vet att det är du.', fraga: 'vad fyller gustav?', svar: 'svar',
     aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.',
-    lur: 'intressant. det är precis vad han vill att du ska tro. gustav är född 1997.',
+    lur: 'FEL. gustav är född 1997.',
     skriv29: 'FEL. 2026 minus 1997.', godkand: 'RÄTT.', laddar: 'laddar passerkort',
     sista: 'en sista fråga.', kommer: 'kommer du fredag 27 november?', ja: 'JA, JAG KOMMER', nej: 'NEJ, JAG KAN INTE',
     nejSvar: 'noterat: nej. synd, du kommer att saknas. ändrar du dig går det bra att öppna länken igen.',
@@ -57,9 +57,9 @@ const T = {
     identitet: 'identity', sallskap: 'guests',
     plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'people'}`,
     lana: 'gustav would like to borrow your company for a few hours, friday 27 november.',
-    fraga: 'security question: how old is gustav turning?', svar: 'answer',
+    sakerhet: 'first, a security measure, so we know it is you.', fraga: 'how old is gustav turning?', svar: 'answer',
     aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.',
-    lur: 'interesting. that is exactly what he wants you to think. gustav was born in 1997.',
+    lur: 'WRONG. gustav was born in 1997.',
     skriv29: 'WRONG. 2026 minus 1997.', godkand: 'CORRECT.', laddar: 'loading pass',
     sista: 'one last question.', kommer: 'are you coming on friday 27 november?', ja: 'YES, I AM COMING', nej: 'NO, I CAN NOT',
     nejSvar: 'noted: no. too bad, you will be missed. if you change your mind, just open the link again.',
@@ -84,9 +84,9 @@ const T = {
     identitet: 'identidad', sallskap: 'acompañantes',
     plus: n => `+ ${n - 1} ${n === 2 ? 'persona' : 'personas'}`,
     lana: 'gustav quiere tomar prestada tu compañía unas horas, el viernes 27 de noviembre.',
-    fraga: 'pregunta de control: ¿cuántos años cumple gustav?', svar: 'respuesta',
+    sakerhet: 'primero, una medida de seguridad, para saber que eres tú.', fraga: '¿cuántos años cumple gustav?', svar: 'respuesta',
     aldre: 'MAL. es mayor.', yngre: 'MAL. es más joven.',
-    lur: 'interesante. eso es justo lo que él quiere que creas. gustav nació en 1997.',
+    lur: 'MAL. gustav nació en 1997.',
     skriv29: 'MAL. 2026 menos 1997.', godkand: 'CORRECTO.', laddar: 'cargando pase',
     sista: 'una última pregunta.', kommer: '¿vienes el viernes 27 de noviembre?', ja: 'SÍ, VOY', nej: 'NO, NO PUEDO',
     nejSvar: 'anotado: no. qué pena, te echaremos de menos. si cambias de opinión, abre el enlace otra vez.',
@@ -111,9 +111,9 @@ const T = {
     identitet: 'identité', sallskap: 'accompagnants',
     plus: n => `+ ${n - 1} ${n === 2 ? 'personne' : 'personnes'}`,
     lana: 'gustav aimerait emprunter ta compagnie quelques heures, vendredi 27 novembre.',
-    fraga: 'question de contrôle : quel âge va avoir gustav ?', svar: 'réponse',
+    sakerhet: 'd’abord, une mesure de sécurité, pour savoir que c’est bien toi.', fraga: 'quel âge va avoir gustav ?', svar: 'réponse',
     aldre: 'FAUX. il est plus âgé.', yngre: 'FAUX. il est plus jeune.',
-    lur: 'intéressant. c’est exactement ce qu’il veut te faire croire. gustav est né en 1997.',
+    lur: 'FAUX. gustav est né en 1997.',
     skriv29: 'FAUX. 2026 moins 1997.', godkand: 'CORRECT.', laddar: 'chargement du pass',
     sista: 'une dernière question.', kommer: 'tu viens vendredi 27 novembre ?', ja: 'OUI, JE VIENS', nej: 'NON, JE NE PEUX PAS',
     nejSvar: 'noté : non. dommage, tu vas nous manquer. si tu changes d’avis, rouvre le lien.',
@@ -139,7 +139,8 @@ const akt = vad => vad === 'Dörrarna öppnar' ? t().dorr : vad.toUpperCase();
 // ---------------------------------------------------------------- terminalen skriver
 const vila = ms => new Promise(r => setTimeout(r, snabbt ? 0 : ms));
 document.addEventListener('pointerdown', e => { if (!e.target.closest('button,a')) snabbt = true; });
-const botten = () => window.scrollTo(0, document.body.scrollHeight);
+let ankare = null;   // när ett nytt steg börjar hålls det steget överst i stället för att sidan följer botten
+const botten = () => ankare ? ankare.scrollIntoView({ block: 'start' }) : window.scrollTo(0, document.body.scrollHeight);
 async function skriv(text, klass) {
   const r = el('div', { class: 'l ' + (klass || '') });
   m.append(r);
@@ -230,6 +231,7 @@ async function inbjudan() {
   tom();
   await skriv('> ' + t().lana);
   tom();
+  await skriv('> ' + t().sakerhet);
   await skriv('> ' + t().fraga, 'stark');
   return fragan();
 }
@@ -307,6 +309,7 @@ async function laddaPasserkort() {
   snabbt = false;
   const svar = skicka({ a: 'svar', k: kod, svar: 'ja' });
   await vila(500);
+  ankare = null; m.style.paddingBottom = '';
   m.className = 'mitten';
   const stapel = rad('');
   m.replaceChildren(rad('271126', 'svag'), rad(`> ${t().laddar}`), stapel);
@@ -450,15 +453,13 @@ async function start() {
   if (lank.svar) await skriv('> ' + t().tidigare(t()[lank.svar] || lank.svar), 'svag');
   await inbjudan();
   await skriv('> ' + t().godkand, 'stark');
-  await vila(900);
-  // nytt steg: skärmen töms så att det känns som att man har tagit sig vidare
-  m.className = 'ny';
-  m.replaceChildren(rad('271126', 'svag'));
-  window.scrollTo(0, 0);
-  await vila(500);
-  tom(); tom();
+  await vila(700);
+  // nytt steg: luft, en avdelare och frågan stort; sidan glider vidare nedåt
+  const steg = el('div', { class: 'nytt-steg' });
+  m.append(steg);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  await vila(700);
   await skriv('> ' + t().sista, 'svag');
-  tom();
   for (;;) {
     await skriv(t().kommer, 'stor-fraga');
     const v = await kommerDu();
