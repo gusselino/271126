@@ -64,7 +64,12 @@ function smsLankar() {
   const s = SpreadsheetApp.getActive().getSheetByName('Länkar');
   const rader = s.getDataRange().getValues();
   for (let i = 1; i < rader.length; i++) {
-    const kod = String(rader[i][K.kod - 1]), tel = String(rader[i][K.telefon - 1]).replace(/[^0-9+]/g, '');
+    const kod = String(rader[i][K.kod - 1]);
+    // Svenska nummer i alla former blir +46...: 070-123 45 67, 46701234567 (Sheets tar bort plustecknet), +46 70 ...
+    let tel = String(rader[i][K.telefon - 1]).replace(/[^0-9+]/g, '');
+    if (/^00/.test(tel)) tel = '+' + tel.slice(2);
+    else if (/^0/.test(tel)) tel = '+46' + tel.slice(1);
+    else if (/^46/.test(tel)) tel = '+' + tel;
     if (!kod || !tel) continue;
     const n = Math.max(1, Number(rader[i][K.platser - 1]) || 1);
     const text = '271126. Det här är din länk, den gäller bara dig' + (n > 1 ? ' och ' + (n - 1) + ' till' : '') + ': ' + SAJT + '?' + kod;
