@@ -95,3 +95,13 @@ body.term.skak main{animation:skak .5s cubic-bezier(.36,.07,.19,.97)}
 body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-index:29;pointer-events:none;animation:rodblixt .5s steps(1) forwards}
 @keyframes skak{10%,90%{transform:translateX(-3px)}20%,80%{transform:translateX(6px)}30%,50%,70%{transform:translateX(-12px)}40%,60%{transform:translateX(12px)}}
 @keyframes rodblixt{0%,40%{opacity:.35}20%,60%,100%{opacity:0}}
+/* sidbytena: skärmen slocknar, laddar mitt på, och nästa sida flimrar in */
+.term main.slack{animation:slack .35s steps(1) forwards}
+@keyframes slack{0%,30%,60%{opacity:1}15%,45%,100%{opacity:0}}
+.term main.mitten{min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+.term main.ny{animation:flimmerin .5s steps(1)}
+@keyframes flimmerin{0%,20%,40%{opacity:0}10%,30%,100%{opacity:1}}
+.term .knapprad{margin-top:4px}
+.term .knapprad button{padding:9px 4px;margin:-9px 0}
+.term .knapprad button:active,.term .stor-knapp:active{background:#c8f7c5;color:#050505;text-shadow:none}
+.term .stor-knapp{display:block;width:100%;margin-top:22px;padding:18px 10px;border:1px solid #c8f7c5;font-size:15px;letter-spacing:.06em}

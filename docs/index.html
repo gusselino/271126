@@ -15,77 +15,89 @@
 <script src="karta.js"></script>
 <script>
 const m = document.getElementById('m');
-const kod = (location.search.slice(1).split('&')[0] || location.hash.slice(1)).toLowerCase().replace(/[^a-z0-9]/g, '');
-const ALDER = 25;   // svaret på säkerhetsfrågan
+const kod = (location.search.slice(1).split('&')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
+const ALDER = 25, LOGN = 29;   // det sanna svaret och det som ledtråden lurar fram (född 1997)
 let lank = null, sprak = null, snabbt = false, klocka = null;
 try { sprak = localStorage.getItem('sprak'); } catch (e) {}
 
+const ANTAL_SV = ['', 'en', 'två', 'tre', 'fyra', 'fem'], ANTAL_EN = ['', 'one', 'two', 'three', 'four', 'five'];
 const T = {
   sv: {
     ansluter: 'ansluter till 271126 ...', ok: 'ok',
     ingen: 'ingen inbjudan hittades.', stangt: 'stängt.', kontakt: 'ingen kontakt. ladda om sidan.',
-    identitet: 'identitet', status: 'status', bjuden: 'BJUDEN', sallskap: 'sällskap',
+    identitet: 'identitet', sallskap: 'sällskap',
     plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'personer'}`,
-    fest: 'du är bjuden på fest fredag 27 november.', forst: 'kolla att du kan komma innan du hämtar biljetten.',
-    steg: ['1. läs igenom', '2. svara på säkerhetsfrågan', '3. spara biljetten. den visas i dörren.'],
-    aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.', lurfel: 'FEL.', lur: 'ledtråd: gustav är faktiskt född 1997.',
-    genom: 'RÄTT. du såg igenom lögnen. han fyller 25.', lurad: 'RÄTT. fast det där var en lögn. han fyller 25.', kartor: '[öppna i kartor]',
-    spara: 'spara', bild: '[bild]', kal: '[kalender]', mejl: '[mejl]', amne: '271126 – min biljett', mejltext: 'Min biljett till fredag 27 november:',
-    dag: 'fredag 27 november 2026', dorr: 'dörrarna öppnar',
-    krav: 'säkerhetsfråga: hur gammal blir gustav?', kodrad: 'svar',
-    skriver: 'skriver ut biljett', biljett: 'BILJETT',
+    lana: 'gustav bergenudd vill låna ditt sällskap några timmar fredagen den 27 november.',
+    sakerhet: 'lite säkerhetsåtgärder, så att vi vet att det faktiskt är du som kommer.',
+    hamta: 'svara på frågan nedan för att hämta ditt passerkort.',
+    fraga: 'säkerhetsfråga: vad fyller gustav?', svar: 'svar',
+    aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.', fel: 'FEL.',
+    lur: 'ledtråd: gustav är faktiskt född 1997 och har i alla år ljugit om sin ålder. han fyller med andra ord 29. skriv 29 för att få din biljett.',
+    skriv29: 'FEL. skriv 29.', godkand: 'GODKÄND. välkommen.', laddar: 'laddar passerkort',
+    passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? '1 PERSON' : `${n} PERSONER`,
-    galler: n => n === 1 ? 'gäller bara dig.' : `gäller dig och ${['', 'en', 'två', 'tre', 'fyra', 'fem'][n - 1] || n - 1} till.`,
+    galler: n => n === 1 ? 'gäller bara dig.' : `gäller dig och ${ANTAL_SV[n - 1] || n - 1} till.`,
     samma: 'ni visar samma kod i dörren.', skarm: 'kommer ni inte samtidigt? skicka en skärmbild av koden.',
-    kladsel: 'kom som dig själv.', kvar: 'öppnar om', nu: 'öppet nu.',
+    spara: 'spara', bild: '[bild]', bildtips: 'välj ”spara bild” så hamnar den i bilder.',
+    kalender: 'kalender', apple: '[apple]', google: '[google]', mejl: 'mejla till dig själv', mejlknapp: '[mejl]',
+    infoknapp: 'INFO: PROGRAM, KARTA', tillbaka: 'TILLBAKA TILL PASSERKORTET',
+    dag: 'fredag 27 november 2026', dorr: 'dörrarna öppnar', program: 'program', plats: 'plats',
+    kartor: '[öppna i kartor]', kladsel: 'kom som dig själv.', kvar: 'öppnar om', nu: 'öppet nu.',
+    amne: '271126 – mitt passerkort', mejltext: 'Mitt passerkort till fredag 27 november:',
   },
   en: {
     ansluter: 'connecting to 271126 ...', ok: 'ok',
     ingen: 'no invitation found.', stangt: 'closed.', kontakt: 'no connection. reload the page.',
-    identitet: 'identity', status: 'status', bjuden: 'INVITED', sallskap: 'guests',
+    identitet: 'identity', sallskap: 'guests',
     plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'people'}`,
-    fest: 'you are invited to a party on friday 27 november.', forst: 'make sure you can come before you get your ticket.',
-    steg: ['1. read this', '2. answer the security question', '3. save your ticket. you show it at the door.'],
-    aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.', lurfel: 'WRONG.', lur: 'hint: gustav was actually born in 1997.',
-    genom: 'CORRECT. you saw through the lie. he turns 25.', lurad: 'CORRECT. though that was a lie. he turns 25.', kartor: '[open in maps]',
-    spara: 'save', bild: '[image]', kal: '[calendar]', mejl: '[email]', amne: '271126 – my ticket', mejltext: 'My ticket for Friday 27 November:',
-    dag: 'friday 27 november 2026', dorr: 'doors open',
-    krav: 'security question: how old is gustav turning?', kodrad: 'answer',
-    skriver: 'printing ticket', biljett: 'TICKET',
+    lana: 'gustav bergenudd would like to borrow your company for a few hours on friday 27 november.',
+    sakerhet: 'a few security measures, so we know it is actually you coming.',
+    hamta: 'answer the question below to get your pass.',
+    fraga: 'security question: how old is gustav turning?', svar: 'answer',
+    aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.', fel: 'WRONG.',
+    lur: 'hint: gustav was actually born in 1997 and has lied about his age for years. in other words he is turning 29. enter 29 to get your ticket.',
+    skriv29: 'WRONG. enter 29.', godkand: 'ACCEPTED. welcome.', laddar: 'loading pass',
+    passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? '1 PERSON' : `${n} PEOPLE`,
-    galler: n => n === 1 ? 'valid for you only.' : `valid for you and ${['', 'one', 'two', 'three', 'four', 'five'][n - 1] || n - 1} more.`,
+    galler: n => n === 1 ? 'valid for you only.' : `valid for you and ${ANTAL_EN[n - 1] || n - 1} more.`,
     samma: 'you all show the same code at the door.', skarm: 'not arriving together? send them a screenshot of the code.',
-    kladsel: 'come as yourself.', kvar: 'doors in', nu: 'open now.',
+    spara: 'save', bild: '[image]', bildtips: 'choose “save image” to put it in photos.',
+    kalender: 'calendar', apple: '[apple]', google: '[google]', mejl: 'email it to yourself', mejlknapp: '[email]',
+    infoknapp: 'INFO: LINE-UP, MAP', tillbaka: 'BACK TO YOUR PASS',
+    dag: 'friday 27 november 2026', dorr: 'doors open', program: 'line-up', plats: 'location',
+    kartor: '[open in maps]', kladsel: 'come as yourself.', kvar: 'doors in', nu: 'open now.',
+    amne: '271126 – my pass', mejltext: 'My pass for Friday 27 November:',
   },
 };
 const t = () => T[sprak || 'sv'];
+const akt = vad => vad === 'Dörrarna öppnar' ? t().dorr : vad.toUpperCase();
 
-// ---- utskrift tecken för tecken. Ett tryck på skärmen skriver ut resten direkt.
+// ---------------------------------------------------------------- terminalen skriver
 const vila = ms => new Promise(r => setTimeout(r, snabbt ? 0 : ms));
-document.addEventListener('pointerdown', e => { if (!e.target.closest('button')) snabbt = true; });
-function botten() { window.scrollTo(0, document.body.scrollHeight); }
+document.addEventListener('pointerdown', e => { if (!e.target.closest('button,a')) snabbt = true; });
+const botten = () => window.scrollTo(0, document.body.scrollHeight);
 async function skriv(text, klass) {
-  const rad = el('div', { class: 'l ' + (klass || '') });
-  m.append(rad);
-  for (const c of text) { rad.append(c); if (!snabbt) { botten(); await vila(11); } }
+  const r = el('div', { class: 'l ' + (klass || '') });
+  m.append(r);
+  for (const c of text) { r.append(c); if (!snabbt) { botten(); await vila(11); } }
   botten();
   await vila(110);
-  return rad;
+  return r;
 }
 const tom = () => m.append(el('div', { class: 'l' }, ' '));
+const rad = (text, klass) => el('div', { class: 'l ' + (klass || '') }, text);
+
+function skaka() {
+  document.body.classList.remove('skak'); void document.body.offsetWidth; document.body.classList.add('skak');
+  setTimeout(() => document.body.classList.remove('skak'), 600);
+  if (navigator.vibrate) navigator.vibrate([70, 40, 70, 40, 160]);
+}
 
 function nedrakning() {
   const ms = new Date(FEST.start) - Date.now();
   if (ms <= 0) return t().nu;
   const s = Math.floor(ms / 1000), tv = n => String(n).padStart(2, '0');
   return `${t().kvar} ${Math.floor(s / 86400)}d ${tv(Math.floor(s / 3600) % 24)}:${tv(Math.floor(s / 60) % 60)}:${tv(s % 60)}`;
-}
-
-const akt = vad => vad === 'Dörrarna öppnar' ? t().dorr : vad.toUpperCase();
-
-async function program() {
-  for (const [tid, vad] of FEST.program) await skriv(`  ${tid}  ${akt(vad)}`);
-  await skriv(`  ${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`);
 }
 
 function karta() {
@@ -96,41 +108,37 @@ function karta() {
   return k;
 }
 
-// ---- steg 0: språk
+// ---------------------------------------------------------------- sida 1: inbjudan och frågan
 function valjSprak() {
   return new Promise(klar => {
-    const rad = el('div', { class: 'l val' }, '> språk / language: ',
+    const r = el('div', { class: 'l val' }, '> språk / language: ',
       ...['sv', 'en'].map(s => el('button', { onclick: () => {
         sprak = s; try { localStorage.setItem('sprak', s); } catch (e) {}
         document.documentElement.lang = s;
-        rad.replaceChildren('> språk / language: ' + s); klar();
+        r.replaceChildren('> språk / language: ' + s); klar();
       } }, `[${s}]`)));
-    m.append(rad); botten();
+    m.append(r); botten();
   });
 }
 
-// ---- steg 1: inbjudan och kodlåset
 async function inbjudan() {
-  await skriv(`> ${t().identitet}: ${lank.namn.toUpperCase()}`);
-  await skriv(`> ${t().status}: ${t().bjuden}`, 'stark');
+  await skriv(`> ${t().identitet}: ${lank.namn.toUpperCase()}`, 'stark');
   if (lank.platser > 1) await skriv(`> ${t().sallskap}: ${t().plus(lank.platser)}`);
   tom();
-  await skriv('> ' + t().fest);
-  await program();
-  m.append(karta()); botten(); await vila(400);
+  await skriv('> ' + t().lana);
   tom();
-  await skriv('> ' + t().forst);
-  for (const rad of t().steg) await skriv('  ' + rad);
+  await skriv('> ' + t().sakerhet);
+  await skriv('> ' + t().hamta);
   tom();
-  await skriv('> ' + t().krav);
+  await skriv('> ' + t().fraga, 'stark');
+  return fragan();
 }
 
-function kodlas() {
+function fragan() {
   return new Promise(klar => {
     let v = '', last = false, lurad = false;
-    const visning = el('div', { class: 'l kod' });
-    const fel = el('div', { class: 'l fel' }, ' ');
-    const rita = () => { visning.textContent = `  ${t().kodrad}: ${v.padEnd(2, '_').split('').join(' ')}`; };
+    const visning = rad('', 'kod'), fel = rad(' ', 'fel'), ledtrad = rad('', 'stark');
+    const rita = () => { visning.textContent = `  ${t().svar}: ${v.padEnd(2, '_').split('').join(' ')}`; };
     const tryck = n => {
       if (last) return;
       if (n === '<') { v = v.slice(0, -1); return rita(); }
@@ -139,15 +147,18 @@ function kodlas() {
       if (navigator.vibrate) navigator.vibrate(10);
       if (v.length < 2) return;
       const svar = Number(v); v = '';
-      if (!lurad) {
-        if (svar === ALDER) { lurad = true; skaka(); fel.textContent = '> ' + t().lurfel; ledtrad.textContent = '  ' + t().lur; return setTimeout(rita, 600); }
-        fel.textContent = '> ' + (svar < ALDER ? t().aldre : t().yngre); return setTimeout(rita, 450);
+      if (!lurad && svar === ALDER) {
+        lurad = true; skaka();
+        fel.textContent = '> ' + t().fel; ledtrad.textContent = '> ' + t().lur;
+        return setTimeout(() => { rita(); botten(); }, 600);
       }
-      // efter lögnen godtas både det sanna svaret och det som lögnen pekar på (1997 → 29)
-      if (svar !== ALDER && svar !== ALDER + 4) { fel.textContent = '> ' + (svar < ALDER + 4 ? t().aldre : t().yngre); return setTimeout(rita, 450); }
+      if (svar !== LOGN || !lurad) {
+        fel.textContent = '> ' + (lurad ? t().skriv29 : svar < ALDER ? t().aldre : t().yngre);
+        return setTimeout(rita, 450);
+      }
       last = true; document.removeEventListener('keydown', tangent);
-      knappar.remove(); fel.remove(); ledtrad.remove();
-      klar(svar === ALDER ? 'genom' : 'lurad');
+      knappar.remove(); fel.remove();
+      klar();
     };
     const tangent = e => { if (/^[0-9]$/.test(e.key)) tryck(e.key); else if (e.key === 'Backspace') tryck('<'); };
     document.addEventListener('keydown', tangent);
@@ -155,95 +166,125 @@ function kodlas() {
       ...'123456789'.split('').map(n => el('button', { onclick: () => tryck(n) }, `[${n}]`)),
       el('span'), el('button', { onclick: () => tryck('0') }, '[0]'), el('button', { onclick: () => tryck('<') }, '[<]'));
     rita();
-    const ledtrad = el('div', { class: 'l stark' });
     m.append(visning, knappar, fel, ledtrad); botten();
   });
 }
 
-async function tackaJa(utfall) {
+// ---------------------------------------------------------------- övergången: skärmen töms och passerkortet laddas
+async function laddaPasserkort() {
   snabbt = false;
-  await skriv('> ' + t()[utfall || 'genom'], 'stark');
-  const rad = await skriv(`> ${t().skriver} [          ]   0%`);
+  await skriv('> ' + t().godkand, 'stark');
   const svar = skicka({ a: 'ja', k: kod });
-  for (let i = 1; i <= 10; i++) { await vila(90); rad.textContent = `> ${t().skriver} [${'#'.repeat(i)}${' '.repeat(10 - i)}] ${String(i * 10).padStart(3)}%`; }
+  await vila(500);
+  m.className = 'slack';
+  await vila(350);
+  m.className = 'mitten';
+  const stapel = rad('');
+  m.replaceChildren(rad('271126', 'svag'), rad(`> ${t().laddar}`), stapel);
+  window.scrollTo(0, 0);
+  for (let i = 0; i <= 20; i++) {
+    stapel.textContent = `  [${'#'.repeat(i)}${'.'.repeat(20 - i)}] ${String(i * 5).padStart(3)}%`;
+    await vila(i < 17 ? 55 : 160);
+  }
   const s = await svar;
   if (!s.ok) throw new Error(s.fel);
   lank = s;
   await vila(250);
+  m.className = '';
+  location.hash = 'kort';
 }
 
-// ---- skakningen när någon svarar rätt första gången
-function skaka() {
-  document.body.classList.remove('skak'); void document.body.offsetWidth; document.body.classList.add('skak');
-  setTimeout(() => document.body.classList.remove('skak'), 600);
-  if (navigator.vibrate) navigator.vibrate([70, 40, 70, 40, 160]);
-}
-
-// ---- spara biljetten: som bild, i kalendern eller i ett mejl till sig själv
-function biljettRader() {
+// ---------------------------------------------------------------- sida 2: passerkortet
+function sparaBildText() {
   const n = lank.platser;
   return [t().pers(n), `${lank.namn.toUpperCase()}${n > 1 ? ' ' + t().plus(n).toUpperCase() : ''}`, t().galler(n), '',
     t().dag, ...FEST.program.map(([tid, vad]) => `${tid}  ${akt(vad)}`), `${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`];
 }
 
-async function sparaBild() {
+async function sparaBild(tips) {
   const B = 1080, H = 1720, c = document.createElement('canvas');
   c.width = B; c.height = H;
   const g = c.getContext('2d');
   g.fillStyle = '#050505'; g.fillRect(0, 0, B, H);
   g.fillStyle = '#c8f7c5'; g.font = '40px Menlo, monospace';
-  g.fillText(`271126 // ${t().biljett}`, 70, 110);
+  g.fillText(`271126 // ${t().passerkort}`, 70, 110);
   const q = qrcode(0, 'M'); q.addData(location.origin + '/v.html?b=' + kod); q.make();
   const antal = q.getModuleCount(), ruta = Math.floor(860 / (antal + 6)), sida = ruta * (antal + 6), x0 = (B - sida) / 2, y0 = 160;
   g.fillStyle = '#fff'; g.fillRect(x0, y0, sida, sida);
   g.fillStyle = '#000';
   for (let y = 0; y < antal; y++) for (let x = 0; x < antal; x++) if (q.isDark(y, x)) g.fillRect(x0 + (x + 3) * ruta, y0 + (y + 3) * ruta, ruta, ruta);
   let y = y0 + sida + 110;
-  biljettRader().forEach((rad, i) => {
+  sparaBildText().forEach((r, i) => {
     g.fillStyle = i === 0 ? '#eaffea' : '#c8f7c5'; g.font = (i === 0 ? '76px' : '38px') + ' Menlo, monospace';
-    g.fillText(rad, 70, y); y += i === 0 ? 86 : 54;
+    g.fillText(r, 70, y); y += i === 0 ? 86 : 54;
   });
   const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-  const fil = new File([blob], '271126-biljett.png', { type: 'image/png' });
-  try { if (navigator.canShare && navigator.canShare({ files: [fil] })) return await navigator.share({ files: [fil] }); } catch (e) { return; }
-  const a = el('a', { href: URL.createObjectURL(blob), download: '271126-biljett.png' }); a.click();
+  const fil = new File([blob], '271126-passerkort.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [fil] })) {
+    tips.textContent = '  ' + t().bildtips;
+    try { await navigator.share({ files: [fil] }); } catch (e) {}
+    return;
+  }
+  el('a', { href: URL.createObjectURL(blob), download: '271126-passerkort.png' }).click();
 }
 
-function kalender() {
-  const apple = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
-  if (apple) { location.href = '271126.ics'; return; }
-  window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=271126&dates=20261127T210000Z/20261128T030000Z'
-    + '&location=' + encodeURIComponent(FEST.adress + ', ' + FEST.plats) + '&details=' + encodeURIComponent(location.href), '_blank', 'noopener');
-}
+const lankAdress = () => location.origin + location.pathname + location.search;
+const appleKalender = () => { location.href = '271126.ics'; };
+const googleKalender = () => window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=271126&dates=20261127T210000Z/20261128T030000Z'
+  + '&location=' + encodeURIComponent(FEST.adress + ', ' + FEST.plats) + '&details=' + encodeURIComponent(lankAdress()), '_blank', 'noopener');
+const mejla = () => { location.href = 'mailto:?subject=' + encodeURIComponent(t().amne) + '&body=' + encodeURIComponent(t().mejltext + '\n' + lankAdress()); };
 
-function mejla() {
-  location.href = 'mailto:?subject=' + encodeURIComponent(t().amne) + '&body=' + encodeURIComponent(t().mejltext + '\n' + location.href);
-}
+const topp = (titel, knapp) => el('div', { class: 'l topp' }, el('span', {}, `271126 // ${titel}`), knapp);
+const sprakknapp = rita => el('button', { onclick: () => { sprak = sprak === 'en' ? 'sv' : 'en'; try { localStorage.setItem('sprak', sprak); } catch (e) {} rita(); } }, sprak === 'en' ? '[sv]' : '[en]');
 
-// ---- steg 2: biljetten
-function biljett() {
+function visaKort() {
   clearInterval(klocka);
-  const n = lank.platser, ned = el('div', { class: 'l svag' }, '  ' + nedrakning());
-  klocka = setInterval(() => { ned.textContent = '  ' + nedrakning(); }, 1000);
-  const byt = () => { sprak = sprak === 'en' ? 'sv' : 'en'; try { localStorage.setItem('sprak', sprak); } catch (e) {} biljett(); };
+  const n = lank.platser, tips = rad('', 'svag');
+  m.className = 'ny';
   m.replaceChildren(
-    el('div', { class: 'l topp' }, el('span', {}, `271126 // ${t().biljett}`), el('button', { onclick: byt }, sprak === 'en' ? '[sv]' : '[en]')),
+    topp(t().passerkort, sprakknapp(visaKort)),
     el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + kod)),
-    el('div', { class: 'l spara' }, `> ${t().spara}: `, el('button', { onclick: sparaBild }, t().bild), ' ', el('button', { onclick: kalender }, t().kal), ' ', el('button', { onclick: mejla }, t().mejl)),
-    el('div', { class: 'l stor' }, t().pers(n)),
-    el('div', { class: 'l' }, `> ${lank.namn.toUpperCase()}${n > 1 ? ' ' + t().plus(n).toUpperCase() : ''}`),
-    el('div', { class: 'l' }, '> ' + t().galler(n)),
-    ...(n > 1 ? [el('div', { class: 'l' }, '> ' + t().samma), el('div', { class: 'l' }, '> ' + t().skarm)] : []),
-    el('div', { class: 'l' }, ' '),
-    el('div', { class: 'l' }, '  ' + t().dag),
-    ...FEST.program.map(([tid, vad]) => el('div', { class: 'l' }, `  ${tid}  ${akt(vad)}`)),
-    el('div', { class: 'l' }, `  ${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`),
-    ned,
-    karta(),
-    el('div', { class: 'l' }, ' '),
-    el('div', { class: 'l' }, '> ' + t().kladsel, el('span', { class: 'mark' })));
+    rad(t().pers(n), 'stor'),
+    rad(`> ${lank.namn.toUpperCase()}${n > 1 ? ' ' + t().plus(n).toUpperCase() : ''}`),
+    rad('> ' + t().galler(n)),
+    ...(n > 1 ? [rad('> ' + t().samma), rad('> ' + t().skarm)] : []),
+    rad(' '),
+    el('div', { class: 'l knapprad' }, `> ${t().spara}: `, el('button', { onclick: () => sparaBild(tips) }, t().bild)),
+    tips,
+    el('div', { class: 'l knapprad' }, `> ${t().kalender}: `, el('button', { onclick: appleKalender }, t().apple), ' ', el('button', { onclick: googleKalender }, t().google)),
+    el('div', { class: 'l knapprad' }, `> ${t().mejl}: `, el('button', { onclick: mejla }, t().mejlknapp)),
+    el('button', { class: 'stor-knapp', onclick: () => { location.hash = 'info'; } }, `[ ${t().infoknapp} ]`));
   window.scrollTo(0, 0);
 }
+
+// ---------------------------------------------------------------- sida 3: info
+function visaInfo() {
+  clearInterval(klocka);
+  const ned = rad('> ' + nedrakning(), 'stark');
+  klocka = setInterval(() => { ned.textContent = '> ' + nedrakning(); }, 1000);
+  m.className = 'ny';
+  m.replaceChildren(
+    topp(t().info, sprakknapp(visaInfo)),
+    ned,
+    rad(' '),
+    rad(`> ${t().program}`, 'stark'),
+    rad('  ' + t().dag),
+    ...FEST.program.map(([tid, vad]) => rad(`  ${tid}  ${akt(vad)}`)),
+    rad(' '),
+    rad(`> ${t().plats}`, 'stark'),
+    rad(`  ${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`),
+    karta(),
+    rad('> ' + t().kladsel),
+    el('button', { class: 'stor-knapp', onclick: () => { location.hash = 'kort'; } }, `[ ${t().tillbaka} ]`));
+  window.scrollTo(0, 0);
+}
+
+// ---------------------------------------------------------------- start och navigering
+function visaSida() {
+  if (!lank || !lank.ja) return;
+  if (location.hash === '#info') visaInfo(); else visaKort();
+}
+window.addEventListener('hashchange', visaSida);
 
 async function start() {
   await skriv('271126');
@@ -256,15 +297,14 @@ async function start() {
   if (!lank) return skriv('> ' + t().kontakt, 'fel');
   if (!lank.ok) return skriv('> ' + t().ingen, 'svag');
   await skriv('> ' + t().ok);
-  if (lank.ja) { await vila(300); return biljett(); }
+  if (lank.ja) { await vila(250); location.hash = 'kort'; return visaSida(); }
   await inbjudan();
-  let utfall = await kodlas();
   for (;;) {
-    try { await tackaJa(utfall); break; }
-    catch (e) { await skriv('> ' + t().kontakt, 'fel'); utfall = await kodlas(); }
+    try { await laddaPasserkort(); break; }
+    catch (e) { m.className = ''; await skriv('> ' + t().kontakt, 'fel'); await fragan(); }
   }
-  biljett();
 }
+if (location.hash) history.replaceState(null, '', location.pathname + location.search);
 start();
 </script>
 </body>
