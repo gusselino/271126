@@ -44,6 +44,7 @@ const T = {
     passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
     galler: n => n === 1 ? 'biljetten gäller 1 person.' : `biljetten gäller ${n} personer: dig och ${TAL.sv[n - 1] || n - 1} till.`,
+    hallInne: 'håll fingret på bilden och välj ”lägg till i bilder”.', stang: 'STÄNG',
     spara: 'spara biljetten på något av följande sätt:', bild: 'SPARA SOM BILD', bildtips: 'välj ”spara bild” så hamnar den i bilder.',
     kal: 'LÄGG IN I KALENDERN', infoknapp: 'INFO: PROGRAM, KARTA', tillbaka: 'TILLBAKA TILL PASSERKORTET',
     dag: 'fredag 27 november 2026', dorr: 'dörrarna öppnar', program: 'program', plats: 'plats',
@@ -70,6 +71,7 @@ const T = {
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
     galler: n => n === 1 ? 'the ticket is valid for 1 person.' : `the ticket is valid for ${n} people: you and ${TAL.en[n - 1] || n - 1} more.`,
+    hallInne: 'press and hold the image and choose “add to photos”.', stang: 'CLOSE',
     spara: 'save your ticket in one of these ways:', bild: 'SAVE AS IMAGE', bildtips: 'choose “save image” to put it in photos.',
     kal: 'ADD TO CALENDAR', infoknapp: 'INFO: LINE-UP, MAP', tillbaka: 'BACK TO YOUR PASS',
     dag: 'friday 27 november 2026', dorr: 'doors open', program: 'line-up', plats: 'location',
@@ -96,6 +98,7 @@ const T = {
     passerkort: 'PASE', info: 'INFO',
     pers: n => n === 1 ? 'SOLO TÚ' : `TÚ + ${n - 1}`,
     galler: n => n === 1 ? 'la entrada vale para 1 persona.' : `la entrada vale para ${n} personas: tú y ${TAL.es[n - 1] || n - 1} más.`,
+    hallInne: 'mantén pulsada la imagen y elige “guardar en fotos”.', stang: 'CERRAR',
     spara: 'guarda tu entrada de una de estas formas:', bild: 'GUARDAR COMO IMAGEN', bildtips: 'elige “guardar imagen” para tenerla en fotos.',
     kal: 'AÑADIR AL CALENDARIO', infoknapp: 'INFO: PROGRAMA, MAPA', tillbaka: 'VOLVER AL PASE',
     dag: 'viernes 27 de noviembre de 2026', dorr: 'se abren las puertas', program: 'programa', plats: 'lugar',
@@ -122,6 +125,7 @@ const T = {
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUSTE TOI' : `TOI + ${n - 1}`,
     galler: n => n === 1 ? 'le billet est valable pour 1 personne.' : `le billet est valable pour ${n} personnes : toi et ${TAL.fr[n - 1] || n - 1} autres.`,
+    hallInne: 'appuie longuement sur l’image et choisis « ajouter à photos ».', stang: 'FERMER',
     spara: 'enregistre ton billet de l’une de ces façons :', bild: 'ENREGISTRER L’IMAGE', bildtips: 'choisis « enregistrer l’image » pour la garder dans photos.',
     kal: 'AJOUTER AU CALENDRIER', infoknapp: 'INFO : PROGRAMME, PLAN', tillbaka: 'RETOUR AU PASS',
     dag: 'vendredi 27 novembre 2026', dorr: 'ouverture des portes', program: 'programme', plats: 'lieu',
@@ -355,10 +359,12 @@ async function sparaBild(tips) {
   const fil = new File([blob], '271126-passerkort.png', { type: 'image/png' });
   if (navigator.canShare && navigator.canShare({ files: [fil] })) {
     tips.textContent = '  ' + t().bildtips;
-    try { await navigator.share({ files: [fil] }); } catch (e) {}
-    return;
+    try { await navigator.share({ files: [fil] }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
   }
-  el('a', { href: URL.createObjectURL(blob), download: '271126-passerkort.png' }).click();
+  // Utan dela-menyn: visa bilden i helskärm. Ett långt tryck på bilden ger "Lägg till i Bilder" på iPhone.
+  const vy = el('div', { class: 'bildvy', onclick: e => { if (e.target === vy || e.target.tagName === 'BUTTON') vy.remove(); } },
+    rad('> ' + t().hallInne, 'stark'), el('img', { src: URL.createObjectURL(blob), alt: '271126' }), el('button', {}, '[ ' + t().stang + ' ]'));
+  document.body.append(vy);
 }
 
 const lankAdress = () => location.origin + location.pathname + location.search;
