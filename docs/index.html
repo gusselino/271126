@@ -34,7 +34,7 @@ const T = {
     aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.',
     lur: 'intressant. det är precis vad han vill att du ska tro. gustav är född 1997.',
     skriv29: 'FEL. 2026 minus 1997.', godkand: 'RÄTT.', laddar: 'laddar passerkort',
-    kommer: 'en sista fråga. kommer du fredag 27 november?', ja: 'JA, JAG KOMMER', nej: 'NEJ, JAG KAN INTE',
+    sista: 'en sista fråga.', kommer: 'kommer du fredag 27 november?', ja: 'JA, JAG KOMMER', nej: 'NEJ, JAG KAN INTE',
     nejSvar: 'noterat: nej. synd, du kommer att saknas. ändrar du dig går det bra att öppna länken igen.',
     tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
     vem: n => n === 2 ? 'vem tar du med? förnamn och efternamn.' : 'vilka tar du med? förnamn och efternamn.',
@@ -61,7 +61,7 @@ const T = {
     aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.',
     lur: 'interesting. that is exactly what he wants you to think. gustav was born in 1997.',
     skriv29: 'WRONG. 2026 minus 1997.', godkand: 'CORRECT.', laddar: 'loading pass',
-    kommer: 'one last question. are you coming on friday 27 november?', ja: 'YES, I AM COMING', nej: 'NO, I CAN NOT',
+    sista: 'one last question.', kommer: 'are you coming on friday 27 november?', ja: 'YES, I AM COMING', nej: 'NO, I CAN NOT',
     nejSvar: 'noted: no. too bad, you will be missed. if you change your mind, just open the link again.',
     tidigare: s => `your last answer: ${s}. you can answer again.`,
     vem: n => n === 2 ? 'who are you bringing? first and last name.' : 'who are you bringing? first and last names.',
@@ -88,7 +88,7 @@ const T = {
     aldre: 'MAL. es mayor.', yngre: 'MAL. es más joven.',
     lur: 'interesante. eso es justo lo que él quiere que creas. gustav nació en 1997.',
     skriv29: 'MAL. 2026 menos 1997.', godkand: 'CORRECTO.', laddar: 'cargando pase',
-    kommer: 'una última pregunta. ¿vienes el viernes 27 de noviembre?', ja: 'SÍ, VOY', nej: 'NO, NO PUEDO',
+    sista: 'una última pregunta.', kommer: '¿vienes el viernes 27 de noviembre?', ja: 'SÍ, VOY', nej: 'NO, NO PUEDO',
     nejSvar: 'anotado: no. qué pena, te echaremos de menos. si cambias de opinión, abre el enlace otra vez.',
     tidigare: s => `tu última respuesta: ${s}. puedes responder de nuevo.`,
     vem: n => n === 2 ? '¿a quién traes? nombre y apellido.' : '¿a quiénes traes? nombre y apellido.',
@@ -115,7 +115,7 @@ const T = {
     aldre: 'FAUX. il est plus âgé.', yngre: 'FAUX. il est plus jeune.',
     lur: 'intéressant. c’est exactement ce qu’il veut te faire croire. gustav est né en 1997.',
     skriv29: 'FAUX. 2026 moins 1997.', godkand: 'CORRECT.', laddar: 'chargement du pass',
-    kommer: 'une dernière question. tu viens vendredi 27 novembre ?', ja: 'OUI, JE VIENS', nej: 'NON, JE NE PEUX PAS',
+    sista: 'une dernière question.', kommer: 'tu viens vendredi 27 novembre ?', ja: 'OUI, JE VIENS', nej: 'NON, JE NE PEUX PAS',
     nejSvar: 'noté : non. dommage, tu vas nous manquer. si tu changes d’avis, rouvre le lien.',
     tidigare: s => `ta dernière réponse : ${s}. tu peux répondre à nouveau.`,
     vem: n => n === 2 ? 'qui amènes-tu ? prénom et nom.' : 'qui amènes-tu ? prénoms et noms.',
@@ -450,8 +450,17 @@ async function start() {
   if (lank.svar) await skriv('> ' + t().tidigare(t()[lank.svar] || lank.svar), 'svag');
   await inbjudan();
   await skriv('> ' + t().godkand, 'stark');
+  await vila(900);
+  // nytt steg: skärmen töms så att det känns som att man har tagit sig vidare
+  m.className = 'ny';
+  m.replaceChildren(rad('271126', 'svag'));
+  window.scrollTo(0, 0);
+  await vila(500);
+  tom(); tom();
+  await skriv('> ' + t().sista, 'svag');
+  tom();
   for (;;) {
-    await skriv('> ' + t().kommer, 'stark');
+    await skriv(t().kommer, 'stor-fraga');
     const v = await kommerDu();
     try {
       if (v === 'ja' && lank.platser > 1) await gastFormular();

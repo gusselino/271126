@@ -138,3 +138,5 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .bildvy,.bildvy{position:fixed;inset:0;z-index:40;background:#050505;padding:18px 16px 24px;display:flex;flex-direction:column;gap:12px;overflow:auto}
 .bildvy img{width:100%;max-width:420px;height:auto;align-self:center;-webkit-touch-callout:default;user-select:auto}
 .bildvy button{border:1px solid rgba(200,247,197,.55);padding:14px;width:100%;max-width:420px;align-self:center}
+.term .stor-fraga{font-size:26px;line-height:1.25;color:#eaffea;text-shadow:0 0 12px rgba(150,255,170,.6);margin-bottom:18px}
+.term main.ny{animation:none}
