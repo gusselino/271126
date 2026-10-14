@@ -40,11 +40,12 @@ const T = {
     tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
     vem: n => n === 2 ? 'vem tar du med? förnamn och efternamn.' : 'vilka tar du med? förnamn och efternamn.',
     valfritt: 'går att hoppa över och fylla i senare.', gast: i => `gäst ${i}`, sparaNamn: 'SPARA NAMNEN', hoppa: 'HOPPA ÖVER',
-    medDig: 'med dig', andraGaster: 'ÄNDRA NAMN PÅ GÄSTER', laggTill: 'LÄGG TILL NAMN PÅ GÄSTER', sparar: 'sparar ...',
+    medDig: 'med dig', andraGaster: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', laggTill: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', saknas: 'namn på dina gäster saknas.', sparar: 'sparar ...',
     passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
     galler: n => n === 1 ? 'biljetten gäller 1 person.' : `biljetten gäller ${n} personer: dig och ${ANTAL_SV[n - 1] || n - 1} till.`,
-    samma: 'ni visar samma kod i dörren.', skarm: 'kommer ni inte samtidigt? skicka en skärmbild av koden.',
+    samma: 'koden ovan gäller för er alla. kommer ni samtidigt räcker det att du visar den.',
+    skarm: 'kommer ni vid olika tider? skicka en skärmbild av koden till dem, så visar de den själva.',
     spara: 'spara biljetten på något av följande sätt:', bild: 'SPARA SOM BILD', bildtips: 'välj ”spara bild” så hamnar den i bilder.',
     kal: 'LÄGG IN I KALENDERN', mejlknapp: 'MEJLA TILL DIG SJÄLV',
     infoknapp: 'INFO: PROGRAM, KARTA', tillbaka: 'TILLBAKA TILL PASSERKORTET',
@@ -70,11 +71,12 @@ const T = {
     tidigare: s => `your last answer: ${s}. you can answer again.`,
     vem: n => n === 2 ? 'who are you bringing? first and last name.' : 'who are you bringing? first and last names.',
     valfritt: 'you can skip this and fill it in later.', gast: i => `guest ${i}`, sparaNamn: 'SAVE NAMES', hoppa: 'SKIP',
-    medDig: 'with you', andraGaster: 'CHANGE GUEST NAMES', laggTill: 'ADD GUEST NAMES', sparar: 'saving ...',
+    medDig: 'with you', andraGaster: 'ADD / CHANGE GUEST NAMES', laggTill: 'ADD / CHANGE GUEST NAMES', saknas: 'your guests have no names yet.', sparar: 'saving ...',
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
     galler: n => n === 1 ? 'the ticket is valid for 1 person.' : `the ticket is valid for ${n} people: you and ${ANTAL_EN[n - 1] || n - 1} more.`,
-    samma: 'you all show the same code at the door.', skarm: 'not arriving together? send them a screenshot of the code.',
+    samma: 'the code above works for all of you. if you arrive together, you show it once.',
+    skarm: 'arriving at different times? send them a screenshot of the code and they show it themselves.',
     spara: 'save your ticket in one of these ways:', bild: 'SAVE AS IMAGE', bildtips: 'choose “save image” to put it in photos.',
     kal: 'ADD TO CALENDAR', mejlknapp: 'EMAIL IT TO YOURSELF',
     infoknapp: 'INFO: LINE-UP, MAP', tillbaka: 'BACK TO YOUR PASS',
@@ -293,6 +295,7 @@ const sprakknapp = rita => el('button', { onclick: () => { sprak = sprak === 'en
 function visaKort() {
   clearInterval(klocka);
   const n = lank.platser, tips = el('div', { class: 'l svag tips' });
+  const saknas = n > 1 && (lank.gaster || []).length < n - 1;
   m.className = 'ny';
   m.replaceChildren(
     topp(t().passerkort, sprakknapp(visaKort)),
@@ -302,6 +305,9 @@ function visaKort() {
     rad('> ' + t().galler(n)),
     ...(lank.gaster && lank.gaster.length ? [rad(`> ${t().medDig}: ${lank.gaster.join(', ').toUpperCase()}`)] : []),
     ...(n > 1 ? [rad('> ' + t().samma), rad('> ' + t().skarm)] : []),
+    ...(n > 1 ? [el('div', { class: 'rutor gastknapp' + (saknas ? ' saknas' : '') },
+      ...(saknas ? [rad('> ' + t().saknas, 'fel')] : []),
+      el('button', { onclick: async e => { const plats = e.target.parentElement; plats.className = 'gastknapp'; plats.replaceChildren(); await gastFormular(plats); visaKort(); } }, t().laggTill))] : []),
     rad(' '),
     rad('> ' + t().spara),
     el('div', { class: 'rutor' },
@@ -309,8 +315,7 @@ function visaKort() {
       el('button', { onclick: kalender }, t().kal),
       el('button', { onclick: mejla }, t().mejlknapp)),
     tips,
-    ...(n > 1 ? [el('div', { class: 'rutor gastknapp' }, el('button', { onclick: async e => { const plats = e.target.parentElement; plats.replaceChildren(); await gastFormular(plats); visaKort(); } }, (lank.gaster || []).length ? t().andraGaster : t().laggTill))] : []),
-    el('button', { class: 'stor-knapp', onclick: () => { location.hash = 'info'; } }, `[ ${t().infoknapp} ]`));
+    el('button', { class: 'stor-knapp gron', onclick: () => { location.hash = 'info'; } }, `[ ${t().infoknapp} ]`));
   window.scrollTo(0, 0);
 }
 
