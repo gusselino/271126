@@ -28,7 +28,9 @@ const T = {
     plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'personer'}`,
     fest: 'du är bjuden på fest fredag 27 november.', forst: 'kolla att du kan komma innan du hämtar biljetten.',
     steg: ['1. läs igenom', '2. svara på säkerhetsfrågan', '3. spara biljetten. den visas i dörren.'],
-    aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.', ratt: 'RÄTT.', kartor: '[öppna i kartor]',
+    aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.', lurfel: 'FEL.', lur: 'ledtråd: gustav är faktiskt född 1997.',
+    genom: 'RÄTT. du såg igenom lögnen. han fyller 25.', lurad: 'RÄTT. fast det där var en lögn. han fyller 25.', kartor: '[öppna i kartor]',
+    spara: 'spara', bild: '[bild]', kal: '[kalender]', mejl: '[mejl]', amne: '271126 – min biljett', mejltext: 'Min biljett till fredag 27 november:',
     dag: 'fredag 27 november 2026', dorr: 'dörrarna öppnar',
     krav: 'säkerhetsfråga: hur gammal blir gustav?', kodrad: 'svar',
     skriver: 'skriver ut biljett', biljett: 'BILJETT',
@@ -44,7 +46,9 @@ const T = {
     plus: n => `+ ${n - 1} ${n === 2 ? 'person' : 'people'}`,
     fest: 'you are invited to a party on friday 27 november.', forst: 'make sure you can come before you get your ticket.',
     steg: ['1. read this', '2. answer the security question', '3. save your ticket. you show it at the door.'],
-    aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.', ratt: 'CORRECT.', kartor: '[open in maps]',
+    aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.', lurfel: 'WRONG.', lur: 'hint: gustav was actually born in 1997.',
+    genom: 'CORRECT. you saw through the lie. he turns 25.', lurad: 'CORRECT. though that was a lie. he turns 25.', kartor: '[open in maps]',
+    spara: 'save', bild: '[image]', kal: '[calendar]', mejl: '[email]', amne: '271126 – my ticket', mejltext: 'My ticket for Friday 27 November:',
     dag: 'friday 27 november 2026', dorr: 'doors open',
     krav: 'security question: how old is gustav turning?', kodrad: 'answer',
     skriver: 'printing ticket', biljett: 'TICKET',
@@ -119,12 +123,11 @@ async function inbjudan() {
   for (const rad of t().steg) await skriv('  ' + rad);
   tom();
   await skriv('> ' + t().krav);
-  await kodlas();
 }
 
 function kodlas() {
   return new Promise(klar => {
-    let v = '', last = false;
+    let v = '', last = false, lurad = false;
     const visning = el('div', { class: 'l kod' });
     const fel = el('div', { class: 'l fel' }, ' ');
     const rita = () => { visning.textContent = `  ${t().kodrad}: ${v.padEnd(2, '_').split('').join(' ')}`; };
@@ -135,10 +138,16 @@ function kodlas() {
       v += n; rita(); fel.textContent = ' ';
       if (navigator.vibrate) navigator.vibrate(10);
       if (v.length < 2) return;
-      if (Number(v) !== ALDER) { fel.textContent = '> ' + (Number(v) < ALDER ? t().aldre : t().yngre); v = ''; return setTimeout(rita, 450); }
+      const svar = Number(v); v = '';
+      if (!lurad) {
+        if (svar === ALDER) { lurad = true; skaka(); fel.textContent = '> ' + t().lurfel; ledtrad.textContent = '  ' + t().lur; return setTimeout(rita, 600); }
+        fel.textContent = '> ' + (svar < ALDER ? t().aldre : t().yngre); return setTimeout(rita, 450);
+      }
+      // efter lögnen godtas både det sanna svaret och det som lögnen pekar på (1997 → 29)
+      if (svar !== ALDER && svar !== ALDER + 4) { fel.textContent = '> ' + (svar < ALDER + 4 ? t().aldre : t().yngre); return setTimeout(rita, 450); }
       last = true; document.removeEventListener('keydown', tangent);
-      knappar.remove(); fel.remove();
-      klar();
+      knappar.remove(); fel.remove(); ledtrad.remove();
+      klar(svar === ALDER ? 'genom' : 'lurad');
     };
     const tangent = e => { if (/^[0-9]$/.test(e.key)) tryck(e.key); else if (e.key === 'Backspace') tryck('<'); };
     document.addEventListener('keydown', tangent);
@@ -146,13 +155,14 @@ function kodlas() {
       ...'123456789'.split('').map(n => el('button', { onclick: () => tryck(n) }, `[${n}]`)),
       el('span'), el('button', { onclick: () => tryck('0') }, '[0]'), el('button', { onclick: () => tryck('<') }, '[<]'));
     rita();
-    m.append(visning, knappar, fel); botten();
+    const ledtrad = el('div', { class: 'l stark' });
+    m.append(visning, knappar, fel, ledtrad); botten();
   });
 }
 
-async function tackaJa() {
+async function tackaJa(utfall) {
   snabbt = false;
-  await skriv('> ' + t().ratt, 'stark');
+  await skriv('> ' + t()[utfall || 'genom'], 'stark');
   const rad = await skriv(`> ${t().skriver} [          ]   0%`);
   const svar = skicka({ a: 'ja', k: kod });
   for (let i = 1; i <= 10; i++) { await vila(90); rad.textContent = `> ${t().skriver} [${'#'.repeat(i)}${' '.repeat(10 - i)}] ${String(i * 10).padStart(3)}%`; }
@@ -160,6 +170,54 @@ async function tackaJa() {
   if (!s.ok) throw new Error(s.fel);
   lank = s;
   await vila(250);
+}
+
+// ---- skakningen när någon svarar rätt första gången
+function skaka() {
+  document.body.classList.remove('skak'); void document.body.offsetWidth; document.body.classList.add('skak');
+  setTimeout(() => document.body.classList.remove('skak'), 600);
+  if (navigator.vibrate) navigator.vibrate([70, 40, 70, 40, 160]);
+}
+
+// ---- spara biljetten: som bild, i kalendern eller i ett mejl till sig själv
+function biljettRader() {
+  const n = lank.platser;
+  return [t().pers(n), `${lank.namn.toUpperCase()}${n > 1 ? ' ' + t().plus(n).toUpperCase() : ''}`, t().galler(n), '',
+    t().dag, ...FEST.program.map(([tid, vad]) => `${tid}  ${akt(vad)}`), `${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`];
+}
+
+async function sparaBild() {
+  const B = 1080, H = 1720, c = document.createElement('canvas');
+  c.width = B; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#050505'; g.fillRect(0, 0, B, H);
+  g.fillStyle = '#c8f7c5'; g.font = '40px Menlo, monospace';
+  g.fillText(`271126 // ${t().biljett}`, 70, 110);
+  const q = qrcode(0, 'M'); q.addData(location.origin + '/v.html?b=' + kod); q.make();
+  const antal = q.getModuleCount(), ruta = Math.floor(860 / (antal + 6)), sida = ruta * (antal + 6), x0 = (B - sida) / 2, y0 = 160;
+  g.fillStyle = '#fff'; g.fillRect(x0, y0, sida, sida);
+  g.fillStyle = '#000';
+  for (let y = 0; y < antal; y++) for (let x = 0; x < antal; x++) if (q.isDark(y, x)) g.fillRect(x0 + (x + 3) * ruta, y0 + (y + 3) * ruta, ruta, ruta);
+  let y = y0 + sida + 110;
+  biljettRader().forEach((rad, i) => {
+    g.fillStyle = i === 0 ? '#eaffea' : '#c8f7c5'; g.font = (i === 0 ? '76px' : '38px') + ' Menlo, monospace';
+    g.fillText(rad, 70, y); y += i === 0 ? 86 : 54;
+  });
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  const fil = new File([blob], '271126-biljett.png', { type: 'image/png' });
+  try { if (navigator.canShare && navigator.canShare({ files: [fil] })) return await navigator.share({ files: [fil] }); } catch (e) { return; }
+  const a = el('a', { href: URL.createObjectURL(blob), download: '271126-biljett.png' }); a.click();
+}
+
+function kalender() {
+  const apple = /iPhone|iPad|Macintosh/.test(navigator.userAgent);
+  if (apple) { location.href = '271126.ics'; return; }
+  window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=271126&dates=20261127T210000Z/20261128T030000Z'
+    + '&location=' + encodeURIComponent(FEST.adress + ', ' + FEST.plats) + '&details=' + encodeURIComponent(location.href), '_blank', 'noopener');
+}
+
+function mejla() {
+  location.href = 'mailto:?subject=' + encodeURIComponent(t().amne) + '&body=' + encodeURIComponent(t().mejltext + '\n' + location.href);
 }
 
 // ---- steg 2: biljetten
@@ -171,6 +229,7 @@ function biljett() {
   m.replaceChildren(
     el('div', { class: 'l topp' }, el('span', {}, `271126 // ${t().biljett}`), el('button', { onclick: byt }, sprak === 'en' ? '[sv]' : '[en]')),
     el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + kod)),
+    el('div', { class: 'l spara' }, `> ${t().spara}: `, el('button', { onclick: sparaBild }, t().bild), ' ', el('button', { onclick: kalender }, t().kal), ' ', el('button', { onclick: mejla }, t().mejl)),
     el('div', { class: 'l stor' }, t().pers(n)),
     el('div', { class: 'l' }, `> ${lank.namn.toUpperCase()}${n > 1 ? ' ' + t().plus(n).toUpperCase() : ''}`),
     el('div', { class: 'l' }, '> ' + t().galler(n)),
@@ -199,9 +258,10 @@ async function start() {
   await skriv('> ' + t().ok);
   if (lank.ja) { await vila(300); return biljett(); }
   await inbjudan();
+  let utfall = await kodlas();
   for (;;) {
-    try { await tackaJa(); break; }
-    catch (e) { await skriv('> ' + t().kontakt, 'fel'); await kodlas(); }
+    try { await tackaJa(utfall); break; }
+    catch (e) { await skriv('> ' + t().kontakt, 'fel'); utfall = await kodlas(); }
   }
   biljett();
 }

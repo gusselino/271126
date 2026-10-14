@@ -88,3 +88,10 @@ body.term main{max-width:460px;padding:22px 16px 60px;display:block;min-height:1
 .term .karta .har text{fill:#eaffea;font-size:8.5px;opacity:1}
 .term .karta .prick{fill:#eaffea;animation:blink 1s steps(1) infinite}
 .term .karta a{color:inherit;text-decoration:none;display:inline-block;padding:8px 0}
+.term .spara{margin:-4px 0 12px}
+.term .spara button{padding:8px 4px;margin:-8px 0}
+.term .spara button:active{background:#c8f7c5;color:#050505;text-shadow:none}
+body.term.skak main{animation:skak .5s cubic-bezier(.36,.07,.19,.97)}
+body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-index:29;pointer-events:none;animation:rodblixt .5s steps(1) forwards}
+@keyframes skak{10%,90%{transform:translateX(-3px)}20%,80%{transform:translateX(6px)}30%,50%,70%{transform:translateX(-12px)}40%,60%{transform:translateX(12px)}}
+@keyframes rodblixt{0%,40%{opacity:.35}20%,60%,100%{opacity:0}}
