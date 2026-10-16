@@ -6,13 +6,13 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#050505">
 <title>271126</title>
-<link rel="stylesheet" href="stil.css">
+<link rel="stylesheet" href="stil.css?v=202610162059">
 </head>
 <body class="term">
 <main id="m"></main>
-<script src="qrcode.js"></script>
-<script src="app.js"></script>
-<script src="karta.js"></script>
+<script src="qrcode.js?v=202610162059"></script>
+<script src="app.js?v=202610162059"></script>
+<script src="karta.js?v=202610162059"></script>
 <script>
 const m = document.getElementById('m');
 const kod = (location.search.slice(1).split('&')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -501,6 +501,7 @@ const IKON = {
 function ikon(namn, klass) {
   const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', 'ikon ' + (klass || ''));
+  s.setAttribute('width', '20'); s.setAttribute('height', '20');   // liten även om stilmallen inte hunnit laddas
   s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.6');
   s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round');
   s.innerHTML = IKON[namn];   // fasta teckningar ovan, inget som kommer utifrån
