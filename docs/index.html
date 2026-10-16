@@ -235,44 +235,53 @@ async function inbjudan() {
   await skriv('> ' + t().lana);
   tom();
   await skriv('> ' + t().sakerhet);
-  await skriv('> ' + t().fraga, 'stark');
   return fragan();
 }
 
+// Kodlåset: en liten skärm med frågan och svaren, siffrorna under, knappsatsen längst ner.
 function fragan() {
   return new Promise(klar => {
     let v = '', last = false, lurad = false;
-    const visning = rad('', 'kod'), fel = rad(' ', 'fel'), ledtrad = rad('', 'stark');
-    const rita = () => { visning.textContent = `  ${t().svar}: ${v.padEnd(2, '_').split('').join(' ')}`; };
+    const led = el('i', { class: 'led' });
+    const meddelande = el('div', { class: 'lcd-text' }, t().fraga);
+    const siffror = el('div', { class: 'lcd-siffror' });
+    const skarm = el('div', { class: 'lcd' }, led, meddelande, siffror);
+    const visa = (text, klass) => { meddelande.textContent = text; meddelande.className = 'lcd-text ' + (klass || ''); };
+    const rita = () => { siffror.replaceChildren(...[0, 1].map(i => el('span', { class: v[i] ? 'full' : '' }, v[i] || '_'))); };
     const tryck = n => {
       if (last) return;
       if (n === '<') { v = v.slice(0, -1); return rita(); }
       if (v.length >= 2) return;
-      v += n; rita(); fel.textContent = ' ';
+      v += n; rita();
       if (navigator.vibrate) navigator.vibrate(10);
       if (v.length < 2) return;
-      const svar = Number(v); v = '';
-      if (!lurad && svar === ALDER) {
-        lurad = true; skaka();
-        fel.textContent = '\u00a0'; ledtrad.textContent = '> ' + t().lur;
-        return setTimeout(() => { rita(); botten(); }, 600);
-      }
-      // 29 går alltid igenom, även direkt, så den som kommer tillbaka slipper hela leken
-      if (svar !== LOGN) {
-        fel.textContent = '> ' + (lurad ? t().skriv29 : svar < LOGN ? t().aldre : t().yngre);
-        return setTimeout(rita, 450);
-      }
-      last = true; document.removeEventListener('keydown', tangent);
-      knappar.remove(); fel.remove();
-      klar();
+      const svar = Number(v);
+      setTimeout(() => {
+        v = '';
+        if (!lurad && svar === ALDER) {
+          lurad = true; skaka(); lada.classList.add('nej'); setTimeout(() => lada.classList.remove('nej'), 600);
+          visa(t().lur, 'fel'); return rita();
+        }
+        // 29 går alltid igenom, även direkt, så den som kommer tillbaka slipper hela leken
+        if (svar !== LOGN) {
+          lada.classList.add('nej'); setTimeout(() => lada.classList.remove('nej'), 600);
+          visa(lurad ? t().skriv29 : svar < LOGN ? t().aldre : t().yngre, 'fel'); return rita();
+        }
+        last = true; document.removeEventListener('keydown', tangent);
+        lada.classList.add('ja'); visa(t().godkand, 'ratt');
+        siffror.replaceChildren(...'29'.split('').map(c => el('span', { class: 'full' }, c)));
+        if (navigator.vibrate) navigator.vibrate([30, 40, 60]);
+        setTimeout(klar, 900);
+      }, 250);
     };
     const tangent = e => { if (/^[0-9]$/.test(e.key)) tryck(e.key); else if (e.key === 'Backspace') tryck('<'); };
     document.addEventListener('keydown', tangent);
     const knappar = el('div', { class: 'tang' },
-      ...'123456789'.split('').map(n => el('button', { onclick: () => tryck(n) }, `[${n}]`)),
-      el('span'), el('button', { onclick: () => tryck('0') }, '[0]'), el('button', { onclick: () => tryck('<') }, '[<]'));
+      ...'123456789'.split('').map(n => el('button', { onclick: () => tryck(n) }, n)),
+      el('span'), el('button', { onclick: () => tryck('0') }, '0'), el('button', { class: 'bak', onclick: () => tryck('<') }, '←'));
+    const lada = el('div', { class: 'kodlas' }, skarm, knappar);
     rita();
-    m.append(visning, knappar, fel, ledtrad); botten();
+    m.append(lada); botten();
   });
 }
 
@@ -459,8 +468,7 @@ async function start() {
   if (lank.svar === 'ja') { await vila(250); location.hash = 'kort'; return visaSida(); }
   if (lank.svar) await skriv('> ' + t().tidigare(t()[lank.svar] || lank.svar), 'svag');
   await inbjudan();
-  await skriv('> ' + t().godkand, 'stark');
-  await vila(700);
+  await vila(300);
   // nytt steg: luft, en avdelare och frågan stort; sidan glider vidare nedåt
   const steg = el('div', { class: 'nytt-steg' });
   m.append(steg);
