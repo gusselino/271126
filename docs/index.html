@@ -533,8 +533,7 @@ function visaKort() {
   m.replaceChildren(
     topp(t().passerkort, sprakknapp(visaKort)),
     el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + kod)),
-    el('div', { class: 'personer' }, el('div', { class: 'l stor' }, t().pers(n)),
-      el('div', { class: 'figurer' }, ...Array.from({ length: n }, (_, i) => ikon('person', i === 0 ? 'du' : '')))),
+    rad(t().pers(n), 'stor'),
     rad('\u00a0'),
     rad(t().gastlista + (lank.villkor && n > 1 ? `  (plus: ${lank.villkor})` : ''), 'rubrik'),
     el('div', { class: 'lista' }, ...Array.from({ length: n }, (_, i) => {
