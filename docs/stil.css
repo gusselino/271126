@@ -161,3 +161,21 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .kodlas.ihop{animation:ihop .45s ease-in forwards;overflow:hidden}
 @keyframes ihop{to{max-height:0;padding:0 12px;margin:0;opacity:0;border-color:transparent}}
 .term .kodlas{max-height:520px}
+/* kodlåset, version 2 */
+.term .kodlas{position:relative;padding:22px 16px 18px;background:linear-gradient(180deg,#0b0e0b,#060806);border:1px solid rgba(200,247,197,.4);border-radius:6px;
+  box-shadow:inset 0 1px 0 rgba(200,247,197,.12),0 0 0 1px #000,0 10px 30px rgba(0,0,0,.6)}
+.term .kodlas .skruv{position:absolute;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#3c4a3c,#0d120d);box-shadow:inset 0 0 0 1px rgba(200,247,197,.25)}
+.term .kodlas .skruv::after{content:'';position:absolute;left:1px;right:1px;top:3px;height:1px;background:rgba(0,0,0,.7);transform:rotate(35deg)}
+.term .kodlas .tv{left:7px;top:7px}.term .kodlas .th{right:7px;top:7px}.term .kodlas .bv{left:7px;bottom:7px}.term .kodlas .bh{right:7px;bottom:7px}
+.term .skylt{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.18em;opacity:.45;margin:-8px 4px 8px}
+.term .lcd{background:linear-gradient(180deg,#0f2010,#0a170b);border-radius:3px}
+.term .lcd::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px);border-radius:3px}
+.term .lcd-forsok{position:absolute;right:22px;top:5px;font-size:9px;letter-spacing:.12em;opacity:.5}
+.term .lcd-siffror span{border-bottom:2px solid rgba(200,247,197,.18);padding:0 2px 2px}
+.term .lcd-siffror span.nasta{animation:markorblink 1s steps(1) infinite}
+@keyframes markorblink{50%{opacity:.08}}
+.term .lcd-siffror span.fel{color:#ff6b5e;text-shadow:0 0 12px rgba(255,90,70,.8);opacity:1}
+.term .kodlas .tang button{background:linear-gradient(180deg,#121712,#0a0d0a);box-shadow:0 3px 0 #000,inset 0 1px 0 rgba(200,247,197,.14);transition:transform .05s,box-shadow .05s}
+.term .kodlas .tang button:active{transform:translateY(3px);box-shadow:0 0 0 #000,inset 0 1px 0 rgba(200,247,197,.1);background:#c8f7c5;color:#050505}
+.term .kodlas.ja .lcd{box-shadow:inset 0 0 22px rgba(60,255,110,.25)}
+.term .kodlas.ihop{animation:ihop .45s ease-in forwards}

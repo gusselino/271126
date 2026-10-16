@@ -33,6 +33,7 @@ const T = {
     sakerhet: 'först en säkerhetsåtgärd, så att vi vet att det är du.', fraga: 'vad fyller gustav?', svar: 'svar',
     aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.',
     lur: 'FEL. gustav är född 1997?',
+    beviljad: 'ÅTKOMST BEVILJAD.', forsok: 'försök', modell: 'SÄKERHETSLÅS MOD. 25',
     skriv29: 'FEL. 2026 minus 1997.', godkand: 'RÄTT.', laddar: 'laddar passerkort',
     sista: 'en sista fråga.', kommer: 'kommer du fredag 27 november?', ja: 'JA, JAG KOMMER', nej: 'NEJ, JAG KAN INTE',
     nejSvar: 'noterat: nej. synd, du kommer att saknas. ändrar du dig går det bra att öppna länken igen.',
@@ -60,6 +61,7 @@ const T = {
     sakerhet: 'first, a security measure, so we know it is you.', fraga: 'how old is gustav turning?', svar: 'answer',
     aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.',
     lur: 'WRONG. gustav was born in 1997?',
+    beviljad: 'ACCESS GRANTED.', forsok: 'attempt', modell: 'SECURITY LOCK MOD. 25',
     skriv29: 'WRONG. 2026 minus 1997.', godkand: 'CORRECT.', laddar: 'loading pass',
     sista: 'one last question.', kommer: 'are you coming on friday 27 november?', ja: 'YES, I AM COMING', nej: 'NO, I CAN NOT',
     nejSvar: 'noted: no. too bad, you will be missed. if you change your mind, just open the link again.',
@@ -87,6 +89,7 @@ const T = {
     sakerhet: 'primero, una medida de seguridad, para saber que eres tú.', fraga: '¿cuántos años cumple gustav?', svar: 'respuesta',
     aldre: 'MAL. es mayor.', yngre: 'MAL. es más joven.',
     lur: 'MAL. ¿gustav nació en 1997?',
+    beviljad: 'ACCESO CONCEDIDO.', forsok: 'intento', modell: 'CERRADURA MOD. 25',
     skriv29: 'MAL. 2026 menos 1997.', godkand: 'CORRECTO.', laddar: 'cargando pase',
     sista: 'una última pregunta.', kommer: '¿vienes el viernes 27 de noviembre?', ja: 'SÍ, VOY', nej: 'NO, NO PUEDO',
     nejSvar: 'anotado: no. qué pena, te echaremos de menos. si cambias de opinión, abre el enlace otra vez.',
@@ -114,6 +117,7 @@ const T = {
     sakerhet: 'd’abord, une mesure de sécurité, pour savoir que c’est bien toi.', fraga: 'quel âge va avoir gustav ?', svar: 'réponse',
     aldre: 'FAUX. il est plus âgé.', yngre: 'FAUX. il est plus jeune.',
     lur: 'FAUX. gustav est né en 1997 ?',
+    beviljad: 'ACCÈS AUTORISÉ.', forsok: 'essai', modell: 'SERRURE MOD. 25',
     skriv29: 'FAUX. 2026 moins 1997.', godkand: 'CORRECT.', laddar: 'chargement du pass',
     sista: 'une dernière question.', kommer: 'tu viens vendredi 27 novembre ?', ja: 'OUI, JE VIENS', nej: 'NON, JE NE PEUX PAS',
     nejSvar: 'noté : non. dommage, tu vas nous manquer. si tu changes d’avis, rouvre le lien.',
@@ -238,44 +242,71 @@ async function inbjudan() {
   return fragan();
 }
 
+// ---- ljud för kodlåset: korta toner som byggs i webbläsaren, inga filer
+let ljudCtx = null;
+function ton(frekvens, ms, typ = 'square', styrka = .045, start = 0) {
+  try {
+    ljudCtx = ljudCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (ljudCtx.state === 'suspended') ljudCtx.resume();
+    const o = ljudCtx.createOscillator(), g = ljudCtx.createGain(), t0 = ljudCtx.currentTime + start / 1000;
+    o.type = typ; o.frequency.value = frekvens;
+    g.gain.setValueAtTime(styrka, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + ms / 1000);
+    o.connect(g).connect(ljudCtx.destination); o.start(t0); o.stop(t0 + ms / 1000 + .02);
+  } catch (e) {}
+}
+const ljud = {
+  knapp: () => ton(1180, 45),
+  fel: () => { ton(150, 260, 'sawtooth', .05); ton(110, 260, 'sawtooth', .05, 120); },
+  ratt: () => { ton(880, 90, 'square', .04); ton(1320, 160, 'square', .04, 100); ton(1760, 220, 'sine', .05, 230); },
+  klick: () => ton(90, 70, 'square', .07),
+};
+
 // Kodlåset: en liten skärm med frågan och svaren, siffrorna under, knappsatsen längst ner.
 function fragan() {
   return new Promise(klar => {
-    let v = '', last = false, lurad = false;
+    let v = '', last = false, lurad = false, skriver = 0, forsok = 0;
     const led = el('i', { class: 'led' });
-    const meddelande = el('div', { class: 'lcd-text' }, t().fraga);
+    const meddelande = el('div', { class: 'lcd-text' });
     const siffror = el('div', { class: 'lcd-siffror' });
-    const skarm = el('div', { class: 'lcd' }, led, meddelande, siffror);
-    const visa = (text, klass) => { meddelande.textContent = text; meddelande.className = 'lcd-text ' + (klass || ''); };
-    const rita = () => { siffror.replaceChildren(...[0, 1].map(i => el('span', { class: v[i] ? 'full' : '' }, v[i] || '_'))); };
+    const raknare = el('div', { class: 'lcd-forsok' });
+    const skarm = el('div', { class: 'lcd' }, led, raknare, meddelande, siffror);
+    // texten på skärmen skrivs fram tecken för tecken, som på en riktig display
+    const visa = (text, klass) => {
+      const id = ++skriver;
+      meddelande.className = 'lcd-text ' + (klass || '');
+      meddelande.textContent = '';
+      [...text].forEach((c, i) => setTimeout(() => { if (id === skriver) meddelande.textContent += c; }, i * 22));
+    };
+    const rita = (fel) => {
+      siffror.replaceChildren(...[0, 1].map(i => el('span', { class: (v[i] ? 'full' : i === v.length ? 'nasta' : '') + (fel ? ' fel' : '') }, v[i] || '_')));
+    };
+    const nej = (text) => {
+      ljud.fel(); skaka();
+      lada.classList.remove('nej'); void lada.offsetWidth; lada.classList.add('nej');
+      visa(text, 'fel');
+      raknare.textContent = `${t().forsok} ${++forsok}`;
+    };
     const tryck = n => {
       if (last) return;
-      if (n === '<') { v = v.slice(0, -1); return rita(); }
+      if (n === '<') { if (v) { v = v.slice(0, -1); ljud.knapp(); } return rita(); }
       if (v.length >= 2) return;
-      v += n; rita();
+      v += n; rita(); ljud.knapp();
       if (navigator.vibrate) navigator.vibrate(10);
       if (v.length < 2) return;
       const svar = Number(v);
       setTimeout(() => {
-        v = '';
-        if (!lurad && svar === ALDER) {
-          lurad = true; skaka(); lada.classList.add('nej'); setTimeout(() => lada.classList.remove('nej'), 600);
-          visa(t().lur, 'fel'); return rita();
-        }
+        if (!lurad && svar === ALDER) { lurad = true; rita(true); nej(t().lur); v = ''; return setTimeout(() => rita(), 700); }
         // 29 går alltid igenom, även direkt, så den som kommer tillbaka slipper hela leken
         if (svar !== LOGN) {
-          lada.classList.add('nej'); setTimeout(() => lada.classList.remove('nej'), 600);
-          visa(lurad ? t().skriv29 : svar < LOGN ? t().aldre : t().yngre, 'fel'); return rita();
+          rita(true); nej(lurad ? t().skriv29 : svar < LOGN ? t().aldre : t().yngre); v = '';
+          return setTimeout(() => rita(), 700);
         }
         last = true; document.removeEventListener('keydown', tangent);
-        lada.classList.add('ja'); visa(t().godkand, 'ratt');
-        siffror.replaceChildren(...'29'.split('').map(c => el('span', { class: 'full' }, c)));
+        ljud.ratt(); lada.classList.add('ja'); visa(t().beviljad, 'ratt');
         if (navigator.vibrate) navigator.vibrate([30, 40, 60]);
-        // låset fälls ihop till en rad, så att frågan om man kommer blir det enda på skärmen
-        setTimeout(() => {
-          lada.classList.add('ihop');
-          setTimeout(() => { lada.replaceWith(rad(`> ${t().godkand} 29`, 'stark')); klar(); }, 450);
-        }, 900);
+        // låset klickar upp och fälls ihop till en rad, så att frågan om man kommer blir det enda på skärmen
+        setTimeout(() => { ljud.klick(); lada.classList.add('ihop'); }, 1100);
+        setTimeout(() => { lada.replaceWith(rad(`> ${t().godkand} 29`, 'stark')); klar(); }, 1600);
       }, 250);
     };
     const tangent = e => { if (/^[0-9]$/.test(e.key)) tryck(e.key); else if (e.key === 'Backspace') tryck('<'); };
@@ -283,9 +314,11 @@ function fragan() {
     const knappar = el('div', { class: 'tang' },
       ...'123456789'.split('').map(n => el('button', { onclick: () => tryck(n) }, n)),
       el('span'), el('button', { onclick: () => tryck('0') }, '0'), el('button', { class: 'bak', onclick: () => tryck('<') }, '←'));
-    const lada = el('div', { class: 'kodlas' }, skarm, knappar);
+    const skylt = el('div', { class: 'skylt' }, el('span', {}, '271126'), el('span', {}, t().modell));
+    const lada = el('div', { class: 'kodlas' }, ...['tv', 'th', 'bv', 'bh'].map(p => el('i', { class: 'skruv ' + p })), skylt, skarm, knappar);
     rita();
     m.append(lada); botten();
+    setTimeout(() => visa(t().fraga), 250);
   });
 }
 
