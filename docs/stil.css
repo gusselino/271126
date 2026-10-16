@@ -194,3 +194,6 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .janej .ja{background:#2fd35f;color:#03140a;border:0}
 .term .janej .nej{background:#3a0f0c;color:#ff8a7e;border:1px solid #7a2a24}
 .term .janej button:active{transform:translateY(3px);box-shadow:none}
+.term .kk-tema{font-size:34px;line-height:1.1;color:#eaffea;text-shadow:0 0 14px rgba(150,255,170,.7);margin:18px 0 18px}
+.term .kk-stycke{margin-bottom:14px;line-height:1.65}
+.term .kk-rad button{padding:6px 2px;margin:-6px 0;opacity:.75;text-decoration:underline}
