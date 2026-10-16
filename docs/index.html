@@ -448,7 +448,10 @@ async function start() {
   const hamtat = hamta({ a: 'l', k: kod }).catch(() => null);
   if (!sprak) await valjSprak();
   const anslut = await skriv('> ' + t().ansluter);
+  // prickar medan vi väntar, så att det syns att något händer
+  const prickar = setInterval(() => { anslut.append('.'); }, 700);
   lank = await hamtat;
+  clearInterval(prickar);
   if (!lank) return skriv('> ' + t().kontakt, 'fel');
   if (!lank.ok) return skriv('> ' + t().ingen, 'svag');
   anslut.append(' ' + t().ok);

@@ -13,9 +13,19 @@ const FEST = {
   kladsel: 'Kom som dig själv.',
 };
 
-async function hamta(params) {
-  const r = await fetch(API + '?' + new URLSearchParams(params), { cache: 'no-store' });
-  return r.json();
+// Google svarar ibland långsamt eller med ett tillfälligt fel; då försöker vi igen några gånger.
+async function hamta(params, forsok = 4) {
+  for (let i = 1; ; i++) {
+    try {
+      const styr = new AbortController(), t = setTimeout(() => styr.abort(), 12000);
+      const r = await fetch(API + '?' + new URLSearchParams(params), { cache: 'no-store', signal: styr.signal });
+      clearTimeout(t);
+      return await r.json();
+    } catch (e) {
+      if (i >= forsok) throw e;
+      await new Promise(r => setTimeout(r, 800 * i));
+    }
+  }
 }
 
 // text/plain gör att webbläsaren inte skickar någon förfrågan i förväg, vilket Apps Script inte svarar på
