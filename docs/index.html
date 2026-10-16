@@ -271,7 +271,11 @@ function fragan() {
         lada.classList.add('ja'); visa(t().godkand, 'ratt');
         siffror.replaceChildren(...'29'.split('').map(c => el('span', { class: 'full' }, c)));
         if (navigator.vibrate) navigator.vibrate([30, 40, 60]);
-        setTimeout(klar, 900);
+        // låset fälls ihop till en rad, så att frågan om man kommer blir det enda på skärmen
+        setTimeout(() => {
+          lada.classList.add('ihop');
+          setTimeout(() => { lada.replaceWith(rad(`> ${t().godkand} 29`, 'stark')); klar(); }, 450);
+        }, 900);
       }, 250);
     };
     const tangent = e => { if (/^[0-9]$/.test(e.key)) tryck(e.key); else if (e.key === 'Backspace') tryck('<'); };
