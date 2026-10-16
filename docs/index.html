@@ -17,7 +17,7 @@
 const m = document.getElementById('m');
 const kod = (location.search.slice(1).split('&')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
 const ALDER = 25, LOGN = 29;   // det sanna svaret och det som ledtråden lurar fram (född 1997)
-let lank = null, sprak = null, snabbt = false, klocka = null;
+let favoritord = '', lank = null, sprak = null, snabbt = false, klocka = null;
 try { sprak = localStorage.getItem('sprak'); } catch (e) {}
 
 const SPRAK = ['sv', 'en', 'es', 'fr'];
@@ -33,6 +33,7 @@ const T = {
     sakerhet: 'först en säkerhetsåtgärd, så att vi vet att det är du.', fraga: 'vad fyller gustav?', svar: 'svar',
     aldre: 'FEL. han blir äldre.', yngre: 'FEL. han blir yngre.',
     lur: 'FEL. gustav är född 1997?',
+    ordFraga: 'vad är ditt favoritord? ett ord.', ordKort: 'minst två bokstäver.', ordTack: s => `${s}. bra ord.`, skickaIn: 'SKICKA IN', kommerLas: 'sista kontroll. kommer du fredag 27/11?', nejKort: 'noterat. synd.', dittOrd: 'ditt favoritord',
     beviljad: 'ÅTKOMST BEVILJAD.', forsok: 'försök', modell: 'SÄKERHETSLÅS MOD. 25',
     skriv29: 'FEL. 2026 minus 1997.', godkand: 'RÄTT.', laddar: 'laddar passerkort',
     sista: 'en sista fråga.', kommer: 'kommer du fredag 27 november?', ja: 'JA, JAG KOMMER', nej: 'NEJ, JAG KAN INTE',
@@ -61,6 +62,7 @@ const T = {
     sakerhet: 'first, a security measure, so we know it is you.', fraga: 'how old is gustav turning?', svar: 'answer',
     aldre: 'WRONG. he is older.', yngre: 'WRONG. he is younger.',
     lur: 'WRONG. gustav was born in 1997?',
+    ordFraga: 'what is your favourite word? one word.', ordKort: 'at least two letters.', ordTack: s => `${s}. good word.`, skickaIn: 'SUBMIT', kommerLas: 'final check. are you coming friday 27/11?', nejKort: 'noted. too bad.', dittOrd: 'your favourite word',
     beviljad: 'ACCESS GRANTED.', forsok: 'attempt', modell: 'SECURITY LOCK MOD. 25',
     skriv29: 'WRONG. 2026 minus 1997.', godkand: 'CORRECT.', laddar: 'loading pass',
     sista: 'one last question.', kommer: 'are you coming on friday 27 november?', ja: 'YES, I AM COMING', nej: 'NO, I CAN NOT',
@@ -89,6 +91,7 @@ const T = {
     sakerhet: 'primero, una medida de seguridad, para saber que eres tú.', fraga: '¿cuántos años cumple gustav?', svar: 'respuesta',
     aldre: 'MAL. es mayor.', yngre: 'MAL. es más joven.',
     lur: 'MAL. ¿gustav nació en 1997?',
+    ordFraga: '¿cuál es tu palabra favorita? una palabra.', ordKort: 'al menos dos letras.', ordTack: s => `${s}. buena palabra.`, skickaIn: 'ENVIAR', kommerLas: 'último control. ¿vienes el viernes 27/11?', nejKort: 'anotado. qué pena.', dittOrd: 'tu palabra favorita',
     beviljad: 'ACCESO CONCEDIDO.', forsok: 'intento', modell: 'CERRADURA MOD. 25',
     skriv29: 'MAL. 2026 menos 1997.', godkand: 'CORRECTO.', laddar: 'cargando pase',
     sista: 'una última pregunta.', kommer: '¿vienes el viernes 27 de noviembre?', ja: 'SÍ, VOY', nej: 'NO, NO PUEDO',
@@ -117,6 +120,7 @@ const T = {
     sakerhet: 'd’abord, une mesure de sécurité, pour savoir que c’est bien toi.', fraga: 'quel âge va avoir gustav ?', svar: 'réponse',
     aldre: 'FAUX. il est plus âgé.', yngre: 'FAUX. il est plus jeune.',
     lur: 'FAUX. gustav est né en 1997 ?',
+    ordFraga: 'quel est ton mot préféré ? un seul mot.', ordKort: 'au moins deux lettres.', ordTack: s => `${s}. joli mot.`, skickaIn: 'ENVOYER', kommerLas: 'dernier contrôle. tu viens vendredi 27/11 ?', nejKort: 'noté. dommage.', dittOrd: 'ton mot préféré',
     beviljad: 'ACCÈS AUTORISÉ.', forsok: 'essai', modell: 'SERRURE MOD. 25',
     skriv29: 'FAUX. 2026 moins 1997.', godkand: 'CORRECT.', laddar: 'chargement du pass',
     sista: 'une dernière question.', kommer: 'tu viens vendredi 27 novembre ?', ja: 'OUI, JE VIENS', nej: 'NON, JE NE PEUX PAS',
@@ -302,15 +306,61 @@ function fragan() {
           return setTimeout(() => rita(), 700);
         }
         last = true; document.removeEventListener('keydown', tangent);
-        ljud.ratt(); lada.classList.add('ja'); visa(t().beviljad, 'ratt');
+        ljud.ratt(); visa(t().godkand, 'ratt');
         if (navigator.vibrate) navigator.vibrate([30, 40, 60]);
-        // låset klickar upp och fälls ihop till en rad, så att frågan om man kommer blir det enda på skärmen
-        setTimeout(() => { ljud.klick(); lada.classList.add('ihop'); }, 1100);
-        setTimeout(() => { lada.replaceWith(rad(`> ${t().godkand} 29`, 'stark')); klar(); }, 1600);
+        setTimeout(() => ordSteg(), 900);
       }, 250);
     };
     const tangent = e => { if (/^[0-9]$/.test(e.key)) tryck(e.key); else if (e.key === 'Backspace') tryck('<'); };
     document.addEventListener('keydown', tangent);
+
+    // ---- steg 2: favoritordet, med bokstavstangenter i samma lås
+    let ord = '';
+    const ordSteg = () => {
+      siffror.className = 'lcd-ord';
+      const ritaOrd = () => siffror.replaceChildren(el('span', { class: ord ? 'full' : 'nasta' }, ord || '_'));
+      ritaOrd();
+      visa(t().ordFraga);
+      raknare.textContent = '';
+      const skrivTecken = c => {
+        if (c === '<') { ord = ord.slice(0, -1); ljud.knapp(); return ritaOrd(); }
+        if (ord.length >= 14) return;
+        ord += c; ljud.knapp(); if (navigator.vibrate) navigator.vibrate(8); ritaOrd();
+      };
+      const tangentOrd = e => {
+        if (e.key === 'Backspace') return skrivTecken('<');
+        if (e.key === 'Enter') return skickaOrd();
+        if (/^[a-zåäöéü]$/i.test(e.key)) skrivTecken(e.key.toUpperCase());
+      };
+      document.addEventListener('keydown', tangentOrd);
+      const RADER = ['QWERTYUIOPÅ', 'ASDFGHJKLÖÄ', 'ZXCVBNM'];
+      const skickaOrd = () => {
+        if (ord.length < 2) { ljud.fel(); return visa(t().ordKort, 'fel'); }
+        document.removeEventListener('keydown', tangentOrd);
+        ljud.ratt(); visa(t().ordTack(ord), 'ratt');
+        setTimeout(() => kommerSteg(), 1000);
+      };
+      knappar.replaceWith(el('div', { class: 'bokstaver' },
+        ...RADER.map((rad, i) => el('div', { class: 'brad' }, ...[...rad].map(c => el('button', { onclick: () => skrivTecken(c) }, c)),
+          ...(i === 2 ? [el('button', { class: 'bak', onclick: () => skrivTecken('<') }, '←')] : []))),
+        el('button', { class: 'skicka', onclick: skickaOrd }, t().skickaIn)));
+    };
+
+    // ---- steg 3: ja eller nej, fortfarande i låset
+    const kommerSteg = () => {
+      siffror.replaceChildren();
+      visa(t().kommerLas);
+      const val = svar => {
+        if (svar === 'ja') { ljud.ratt(); lada.classList.add('ja'); visa(t().beviljad, 'ratt'); }
+        else { ljud.fel(); visa(t().nejKort, 'fel'); }
+        // låset klickar och fälls ihop till en rad
+        setTimeout(() => { ljud.klick(); lada.classList.add('ihop'); }, 900);
+        setTimeout(() => { lada.replaceWith(rad(`> ${t().godkand} 29 · ${ord}`, 'stark')); klar({ ord, svar }); }, 1400);
+      };
+      lada.querySelector('.bokstaver').replaceWith(el('div', { class: 'janej' },
+        el('button', { class: 'ja', onclick: () => val('ja') }, t().ja), el('button', { class: 'nej', onclick: () => val('nej') }, t().nej)));
+    };
+
     const knappar = el('div', { class: 'tang' },
       ...'123456789'.split('').map(n => el('button', { onclick: () => tryck(n) }, n)),
       el('span'), el('button', { onclick: () => tryck('0') }, '0'), el('button', { class: 'bak', onclick: () => tryck('<') }, '←'));
@@ -357,7 +407,7 @@ function gastFormular(ombord) {
 
 async function laddaPasserkort() {
   snabbt = false;
-  const svar = skicka({ a: 'svar', k: kod, svar: 'ja' });
+  const svar = skicka({ a: 'svar', k: kod, svar: 'ja', ord: favoritord });
   await vila(500);
   ankare = null; m.style.paddingBottom = '';
   m.className = 'mitten';
@@ -370,14 +420,14 @@ async function laddaPasserkort() {
   }
   const s = await svar;
   if (!s.ok) throw new Error(s.fel);
-  lank = Object.assign(s, { gaster: lank.gaster });
+  lank = Object.assign(s, { gaster: lank.gaster, ord: s.ord || favoritord });
   await vila(250);
   m.className = '';
   location.hash = 'kort';
 }
 
 async function svaraInte(v) {
-  const s = await skicka({ a: 'svar', k: kod, svar: v });
+  const s = await skicka({ a: 'svar', k: kod, svar: v, ord: favoritord });
   if (!s.ok) throw new Error(s.fel);
   lank = s;
   tom();
@@ -445,6 +495,7 @@ function visaKort() {
       const namn = i === 0 ? lank.namn : (lank.gaster || [])[i - 1];
       return el('div', { class: 'post' + (namn ? '' : ' tom') }, el('span', { class: 'pnr' }, String(i + 1)), el('span', {}, namn ? namn.toUpperCase() : t().namnSaknas));
     })),
+    ...(lank.ord ? [rad('\u00a0'), rad(`> ${t().dittOrd}: ${lank.ord}`, 'stark')] : []),
     ...(n > 1 ? [rad('\u00a0'), rad('> ' + t().enKod), rad('> ' + t().olikaTider, 'svag')] : []),
     ...(n > 1 ? [el('div', { class: 'rutor gastknapp' + (saknas ? ' saknas' : '') },
             el('button', { onclick: async e => { const plats = e.target.parentElement; plats.className = 'gastknapp'; plats.replaceChildren(); await gastFormular(plats); visaKort(); } }, t().laggTill))] : []),
@@ -504,23 +555,16 @@ async function start() {
   await vila(300);
   if (lank.svar === 'ja') { await vila(250); location.hash = 'kort'; return visaSida(); }
   if (lank.svar) await skriv('> ' + t().tidigare(t()[lank.svar] || lank.svar), 'svag');
-  await inbjudan();
-  await vila(300);
-  // nytt steg: luft, en avdelare och frågan stort; sidan glider vidare nedåt
-  const steg = el('div', { class: 'nytt-steg' });
-  m.append(steg);
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-  await vila(700);
-  await skriv('> ' + t().sista, 'svag');
+  const fran = await inbjudan();
+  favoritord = fran.ord;
+  let v = fran.svar;
   for (;;) {
-    await skriv(t().kommer, 'stor-fraga');
-    const v = await kommerDu();
     try {
       if (v === 'ja' && lank.platser > 1) await gastFormular();
       if (v === 'ja') await laddaPasserkort(); else await svaraInte(v);
       break;
     }
-    catch (e) { m.className = ''; await skriv('> ' + t().kontakt, 'fel'); }
+    catch (e) { m.className = ''; await skriv('> ' + t().kontakt, 'fel'); await skriv(t().kommer, 'stor-fraga'); v = await kommerDu(); }
   }
 }
 if (location.hash) history.replaceState(null, '', location.pathname + location.search);

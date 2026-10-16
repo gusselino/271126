@@ -133,7 +133,11 @@ class H(SimpleHTTPRequestHandler):
         if p.get("a") == "gaster":
             return self._json(spara_gaster(str(p.get("k", "")), p.get("gaster")))
         if p.get("a") == "svar":
-            return self._json(svara(str(p.get("k", "")), str(p.get("svar", ""))))
+            ut = svara(str(p.get("k", "")), str(p.get("svar", "")))
+            if ut.get("ok") and p.get("ord"):
+                LANKAR[p["k"]]["ord"] = str(p["ord"])[:14]
+                ut["ord"] = LANKAR[p["k"]]["ord"]
+            return self._json(ut)
         if p.get("a") == "in":
             return self._json(slapp_in(str(p.get("b", "")), p.get("pin"), p.get("antal")))
         if p.get("a") == "lage":

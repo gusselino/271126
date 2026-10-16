@@ -179,3 +179,18 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .kodlas .tang button:active{transform:translateY(3px);box-shadow:0 0 0 #000,inset 0 1px 0 rgba(200,247,197,.1);background:#c8f7c5;color:#050505}
 .term .kodlas.ja .lcd{box-shadow:inset 0 0 22px rgba(60,255,110,.25)}
 .term .kodlas.ihop{animation:ihop .45s ease-in forwards}
+/* steg 2 och 3 i låset */
+.term .lcd-ord{display:flex;justify-content:center;font-size:30px;line-height:1;margin-top:8px;letter-spacing:.08em;min-height:34px}
+.term .lcd-ord span{opacity:1;color:#eaffea;text-shadow:0 0 12px rgba(150,255,170,.8);border-bottom:2px solid rgba(200,247,197,.25);padding:0 4px 2px;word-break:break-all}
+.term .lcd-ord span.nasta{opacity:.5;animation:markorblink 1s steps(1) infinite}
+.term .bokstaver{margin-top:12px;display:grid;gap:6px}
+.term .brad{display:flex;gap:4px;justify-content:center}
+.term .brad button{flex:1;max-width:32px;padding:11px 0;font-size:14px;border:1px solid rgba(200,247,197,.35);border-radius:4px;background:linear-gradient(180deg,#121712,#0a0d0a);box-shadow:0 2px 0 #000}
+.term .brad button.bak{max-width:48px;flex:1.5}
+.term .brad button:active,.term .skicka:active{transform:translateY(2px);box-shadow:none;background:#c8f7c5;color:#050505;text-shadow:none}
+.term .skicka{margin-top:4px;padding:13px;border:1px solid #c8f7c5;border-radius:4px;letter-spacing:.12em;background:#0f1a0f}
+.term .janej{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.term .janej button{padding:22px 6px;font-size:14px;letter-spacing:.06em;border-radius:5px;box-shadow:0 3px 0 #000;text-shadow:none}
+.term .janej .ja{background:#2fd35f;color:#03140a;border:0}
+.term .janej .nej{background:#3a0f0c;color:#ff8a7e;border:1px solid #7a2a24}
+.term .janej button:active{transform:translateY(3px);box-shadow:none}
