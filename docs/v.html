@@ -6,81 +6,75 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#000000">
 <title>271126 dörr</title>
-<link rel="stylesheet" href="stil.css?v=202610162059">
+<link rel="stylesheet" href="stil.css?v=202610171200">
 </head>
 <body class="vakt">
 <video id="bild" playsinline muted></video>
 <div id="ram"></div>
 <div id="topp"><span>271126 dörr</span><span id="antal">–</span></div>
 <div id="botten"><span id="lage" class="svag">Startar kameran …</span></div>
-<div id="svar"><div class="stor"></div><div class="vem"></div><div class="mer"></div></div>
-<div id="val"><div class="stor"></div><div class="vem"></div><div class="mer"></div><div class="knappar"></div></div>
+<div id="svar"><div class="stor"></div><div class="vem"></div><div class="ord"><span class="ordrubrik">favoritord</span><span class="ordet"></span></div><div class="mer"></div></div>
 <div id="pin">
   <div class="nr">Dörr</div>
   <div class="block"><input id="pinfalt" inputmode="numeric" autocomplete="off" placeholder="Kod"><button id="pinknapp">Öppna</button><div class="fel" id="pinfel"></div></div>
 </div>
 <canvas id="duk" hidden></canvas>
-<script src="jsqr.js?v=202610162059"></script>
-<script src="app.js?v=202610162059"></script>
+<script src="jsqr.js?v=202610171200"></script>
+<script src="app.js?v=202610171200"></script>
 <script>
 const $ = id => document.getElementById(id);
-const svar = $('svar'), val = $('val'), bild = $('bild'), duk = $('duk'), lage = $('lage');
+const svar = $('svar'), bild = $('bild'), duk = $('duk'), lage = $('lage');
 let pin = '';
 try { pin = localStorage.getItem('pin') || ''; } catch (e) {}
 let upptagen = false, senast = '', senastTid = 0;
 
 function visaAntal(s) { if (s && s.totalt != null) $('antal').textContent = `${s.inne} inne / ${s.totalt} väntade`; }
 
-function visaSvar(ja, stor, vem, mer) {
-  val.className = '';
-  svar.className = ja ? 'ja' : 'nej';
+// Grönt: namnet och favoritordet, som vakten säger högt. Skärmen står kvar tills vakten trycker.
+function visaSvar(ja, stor, vem, mer, ord, ordRubrik) {
+  svar.className = (ja ? 'ja' : 'nej') + (ord ? ' medord' : '');
   svar.querySelector('.stor').textContent = stor;
   svar.querySelector('.vem').textContent = vem || '';
+  svar.querySelector('.ordet').textContent = ord || '';
+  svar.querySelector('.ordrubrik').textContent = ordRubrik || 'favoritord';
   svar.querySelector('.mer').textContent = mer || '';
   if (navigator.vibrate) navigator.vibrate(ja ? 60 : [120, 80, 120]);
   clearTimeout(visaSvar.t);
-  visaSvar.t = setTimeout(stang, ja ? 2200 : 4500);
+  visaSvar.t = setTimeout(stang, ja ? 8000 : 5000);
 }
-function stang() { svar.className = ''; val.className = ''; upptagen = false; senastTid = Date.now(); lage.textContent = 'Sikta på biljetten'; }
+function stang() { svar.className = ''; upptagen = false; senastTid = Date.now(); lage.textContent = 'Sikta på biljetten'; }
 svar.addEventListener('click', stang);
 
-const pers = n => n === 1 ? '1 person' : n + ' personer';
-
-// En biljett för flera: vakten väljer hur många som går in nu.
-function visaVal(id, s) {
-  val.className = 'pa';
-  val.querySelector('.stor').textContent = pers(s.kvar);
-  val.querySelector('.vem').textContent = s.namn + (s.gaster && s.gaster.length ? ' + ' + s.gaster.join(', ') : '');
-  val.querySelector('.mer').textContent = s.redan ? `${s.redan} av ${s.platser} är redan inne.` : `Biljetten gäller ${pers(s.platser)}.`;
-  const k = val.querySelector('.knappar');
-  k.replaceChildren(el('button', { class: 'alla', onclick: () => kontrollera(id, s.kvar) }, s.kvar === 1 ? 'Släpp in 1' : `Släpp in alla ${s.kvar}`));
-  for (let n = s.kvar - 1; n >= 1; n--) k.append(el('button', { onclick: () => kontrollera(id, n) }, `Bara ${n} nu`));
-  k.append(el('button', { class: 'tom', onclick: stang }, 'Avbryt'));
+// Vem koden gäller: den inbjudna, en namngiven gäst eller en gäst utan namn.
+const vem = s => s.namn || ('gäst till ' + s.vard);
+function biljettRad(s) {
+  if (s.platser === 1) return '';
+  const gast = s.plats > 1 && s.namn ? `gäst till ${s.vard}. ` : '';
+  return `${gast}${s.pabiljetten || 0} av ${s.platser} på biljetten är inne.`;
 }
 
 function tolka(id, s) {
   visaAntal(s);
-  if (s.ok && s.klar) return visaSvar(true, s.antal > 1 ? s.antal + ' in' : 'Ok', s.namn, s.kvar > 0 ? `${s.kvar} kvar på biljetten.` : '');
-  if (s.ok) return visaVal(id, s);
-  if (s.fel === 'använd') return visaSvar(false, 'Redan inne', s.namn, (s.platser > 1 ? `Alla ${s.platser} är insläppta. ` : '') + (s.tid ? 'Senast ' + s.tid : ''));
-  if (s.fel === 'spärrad') return visaSvar(false, 'Spärrad', s.namn, '');
+  if (s.ok) return visaSvar(true, 'OK', vem(s), biljettRad(s), s.ord, s.plats > 1 ? `${s.vard.split(' ')[0]}s favoritord` : '');
+  if (s.fel === 'använd') return visaSvar(false, 'Redan inne', vem(s), s.tid ? 'Gick in ' + s.tid : '');
+  if (s.fel === 'spärrad') return visaSvar(false, 'Spärrad', vem(s), '');
   if (s.fel === 'pin') { upptagen = false; return fragaPin('Fel kod.'); }
   visaSvar(false, 'Ogiltig', '', 'Biljetten finns inte.');
 }
 
-async function kontrollera(id, antal) {
-  if (upptagen && !antal) return;
+async function kontrollera(id) {
+  if (upptagen) return;
   upptagen = true;
   lage.textContent = 'Kontrollerar …';
   try {
-    tolka(id, await skicka({ a: 'in', b: id, pin, antal: antal || 0 }));
+    tolka(id, await skicka({ a: 'in', b: id, pin }));
   } catch (e) {
     visaSvar(false, 'Ingen kontakt', '', 'Försök igen.');
   }
 }
 
 function idUr(text) {
-  const t = /[?&]b=([a-z0-9]{6,20})/i.exec(text);
+  const t = /[?&]b=([a-z0-9]{6,20}(?:-\d)?)/i.exec(text);
   return t ? t[1].toLowerCase() : null;
 }
 

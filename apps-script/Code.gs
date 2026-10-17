@@ -2,20 +2,22 @@
  * 271126 – baksidan. Ligger som Apps Script i kalkylarket "271126 gästlista".
  *
  * Flikar:
- *   Länkar         A kod | B namn | C platser | D spärrad | E länk | F svar (ja/kanske/nej) | G inne | H senast insläppt  | I svarade | J gäster | K telefon | L sms | M villkor för plus
+ *   Länkar         A kod | B namn | C platser | D spärrad | E länk | F svar (ja/kanske/nej) | G inne | H senast insläppt  | I svarade | J gäster | K telefon | L sms | M villkor för plus | N favoritord | O insläppta
  *   (villkor: fri text som gästen ser, t.ex. "en tjej")
  *   Inställningar  A1 "PIN" | B1 vaktens kod
  *
- * En rad = en inbjudan = en biljett. "platser" är hur många personer biljetten gäller för
- * (1 = bara personen, 2 = plus en, 3 = plus två). "inne" räknas upp i dörren.
+ * En rad = en inbjudan. "platser" är hur många personer den gäller för (1 = bara personen,
+ * 2 = plus en, 3 = plus två). Varje person har en egen QR-kod: kod-1 är den inbjudna, kod-2 och
+ * kod-3 är gästerna. "insläppta" visar vilka platser som har gått in och när, t.ex. "1 22:41; 3 23:10".
+ * "inne" är hur många av dem som är inne.
  *
- * Kör funktionen "installera" en gång. Därefter: Deploy → New deployment → Web app,
+ * Kör funktionen "installera" en gång (och igen efter en uppdatering, den lägger till nya kolumner). Därefter: Deploy → New deployment → Web app,
  * Execute as: Me, Who has access: Anyone.
  */
 
 const SAJT = 'https://271126.com/';
 const TECKEN = 'abcdefghjkmnpqrstuvwxyz23456789'; // inga förväxlingsbara tecken
-const K = { kod: 1, namn: 2, platser: 3, sparrad: 4, lank: 5, svar: 6, inne: 7, senast: 8, svarade: 9, gaster: 10, telefon: 11, sms: 12, villkor: 13 };
+const K = { kod: 1, namn: 2, platser: 3, sparrad: 4, lank: 5, svar: 6, inne: 7, senast: 8, svarade: 9, gaster: 10, telefon: 11, sms: 12, villkor: 13, ord: 14, inslappta: 15 };
 const SVAR = ['ja', 'kanske', 'nej'];
 
 function onOpen() {
@@ -28,7 +30,9 @@ function onOpen() {
 function installera() {
   const ss = SpreadsheetApp.getActive();
   const s = ss.getSheetByName('Länkar') || ss.insertSheet('Länkar');
-  if (s.getLastRow() === 0) s.appendRow(['kod', 'namn', 'platser', 'spärrad', 'länk', 'svar', 'inne', 'senast insläppt', 'svarade', 'gäster', 'telefon', 'sms', 'villkor för plus']);
+  const rubriker = ['kod', 'namn', 'platser', 'spärrad', 'länk', 'svar', 'inne', 'senast insläppt', 'svarade', 'gäster', 'telefon', 'sms', 'villkor för plus', 'favoritord', 'insläppta'];
+  if (s.getLastRow() === 0) s.appendRow(rubriker);
+  rubriker.forEach((r, i) => { if (!s.getRange(1, i + 1).getValue()) s.getRange(1, i + 1).setValue(r); });
   s.setFrozenRows(1);
   const inst = ss.getSheetByName('Inställningar') || ss.insertSheet('Inställningar');
   if (!inst.getRange('B1').getValue()) {
@@ -87,9 +91,17 @@ function allaLankar() {
     rad: i + 2, kod: String(r[0]), namn: String(r[1]), platser: Math.max(1, Number(r[2]) || 1),
     sparrad: !!r[3], svar: SVAR.indexOf(String(r[5])) >= 0 ? String(r[5]) : '', inne: Number(r[6]) || 0, senast: r[7] ? r[7] : null,
     gaster: String(r[9] || '').split(';').map(x => x.trim()).filter(Boolean),
-    villkor: String(r[12] || '').trim(),
-  })).filter(l => l.kod);
+    villkor: String(r[12] || '').trim(), ord: String(r[13] || '').trim(), platserInne: lasPlatser(r[14]),
+  })).filter(l => l.kod).map(l => Object.assign(l, { inne: Object.keys(l.platserInne).length }));
 }
+
+// "1 22:41; 3 23:10" -> { 1: '22:41', 3: '23:10' }
+function lasPlatser(text) {
+  const ut = {};
+  String(text || '').split(';').forEach(d => { const m = /^\s*(\d+)\s*(\S*)/.exec(d); if (m) ut[m[1]] = m[2] || '?'; });
+  return ut;
+}
+function skrivPlatser(p) { return Object.keys(p).sort((a, b) => a - b).map(k => k + ' ' + p[k]).join('; '); }
 
 function lasLank(kod) { return allaLankar().filter(l => l.kod === kod)[0] || null; }
 
@@ -113,11 +125,14 @@ function rakna(alla) {
 function visaLank(kod) {
   const l = lasLank(kod);
   if (!l || l.sparrad) return { ok: false, fel: 'okänd' };
-  return { ok: true, namn: l.namn, platser: l.platser, svar: l.svar, gaster: l.gaster, villkor: l.villkor };
+  return { ok: true, namn: l.namn, platser: l.platser, svar: l.svar, gaster: l.gaster, villkor: l.villkor, ord: l.ord, inslappta: l.platserInne };
 }
 
+// Favoritordet: bara bokstäver, högst 14.
+function stadaOrd(o) { return String(o || '').replace(/[^A-Za-zÅÄÖåäöÉéÜü]/g, '').slice(0, 14).toUpperCase(); }
+
 /** Gästens svar. Kan ändras hur många gånger som helst; senaste svaret gäller. */
-function svara(kod, svar) {
+function svara(kod, svar, ord) {
   if (SVAR.indexOf(svar) < 0) return { ok: false, fel: 'svar' };
   const las = LockService.getScriptLock();
   las.waitLock(20000);
@@ -126,35 +141,38 @@ function svara(kod, svar) {
     if (!l || l.sparrad) return { ok: false, fel: 'okänd' };
     blad().getRange(l.rad, K.svar).setValue(svar);
     blad().getRange(l.rad, K.svarade).setValue(new Date());
+    const o = stadaOrd(ord);
+    if (o) blad().getRange(l.rad, K.ord).setValue(o);
     SpreadsheetApp.flush();
-    return { ok: true, namn: l.namn, platser: l.platser, svar: svar, gaster: l.gaster };
+    return { ok: true, namn: l.namn, platser: l.platser, svar: svar, gaster: l.gaster, villkor: l.villkor, ord: o || l.ord, inslappta: l.platserInne };
   } finally { las.releaseLock(); }
 }
 
 /**
- * Dörren. Utan antal: en biljett för en person släpps in direkt, en biljett för flera
- * svarar med hur många som är kvar så att vakten väljer. Med antal: släpper in så många.
+ * Dörren. Biljetten "kod-2" är plats 2 på inbjudan "kod" (en kod utan plats är plats 1).
+ * Varje plats släpps in en gång; samma kod igen ger "använd" med klockslaget.
  */
-function slappIn(kod, pin, antal) {
+function slappIn(biljett, pin) {
   if (!pinOk(pin)) return { ok: false, fel: 'pin' };
+  const delar = String(biljett).split('-'), kod = delar[0], plats = Number(delar[1]) || 1;
   const las = LockService.getScriptLock();
   las.waitLock(20000);
   try {
     const alla = allaLankar();
     const l = alla.filter(x => x.kod === kod)[0];
     const r = rakna(alla);
-    if (!l) return { ok: false, fel: 'okänd', inne: r.inne, totalt: r.totalt };
-    const bas = { namn: l.namn, platser: l.platser, gaster: l.gaster, inne: r.inne, totalt: r.totalt };
+    if (!l || plats < 1 || plats > l.platser) return { ok: false, fel: 'okänd', inne: r.inne, totalt: r.totalt };
+    const bas = { namn: plats === 1 ? l.namn : (l.gaster[plats - 2] || ''), vard: plats === 1 ? '' : l.namn, ord: l.ord,
+      plats: plats, platser: l.platser, inne: r.inne, totalt: r.totalt };
     if (l.sparrad) return Object.assign({ ok: false, fel: 'spärrad' }, bas);
-    const kvar = l.platser - l.inne;
-    if (kvar <= 0) return Object.assign({ ok: false, fel: 'använd', tid: l.senast ? klockslag(l.senast) : '' }, bas);
-    let n = Number(antal) || 0;
-    if (!n && l.platser === 1) n = 1;
-    if (!n) return Object.assign({ ok: true, klar: false, redan: l.inne, kvar: kvar }, bas);
-    if (n < 1 || n > kvar || n !== Math.floor(n)) return Object.assign({ ok: false, fel: 'antal', kvar: kvar }, bas);
-    blad().getRange(l.rad, K.inne, 1, 2).setValues([[l.inne + n, new Date()]]);  // inne, senast insläppt
+    if (l.platserInne[plats]) return Object.assign({ ok: false, fel: 'använd', tid: l.platserInne[plats] }, bas);
+    const nu = new Date();
+    l.platserInne[plats] = klockslag(nu);
+    const antal = Object.keys(l.platserInne).length;
+    blad().getRange(l.rad, K.inne, 1, 2).setValues([[antal, nu]]);   // inne, senast insläppt
+    blad().getRange(l.rad, K.inslappta).setValue(skrivPlatser(l.platserInne));
     SpreadsheetApp.flush();
-    return Object.assign({ ok: true, klar: true, antal: n, kvar: kvar - n }, bas, { inne: r.inne + n });
+    return Object.assign({ ok: true, klar: true, pabiljetten: antal }, bas, { inne: r.inne + 1 });
   } finally { las.releaseLock(); }
 }
 
@@ -197,9 +215,9 @@ function doGet(e) {
 function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents || '{}');
-    if (p.a === 'svar') return svar(svara(String(p.k || ''), String(p.svar || '')));
+    if (p.a === 'svar') return svar(svara(String(p.k || ''), String(p.svar || ''), p.ord));
     if (p.a === 'gaster') return svar(sparaGaster(String(p.k || ''), p.gaster));
-    if (p.a === 'in') return svar(slappIn(String(p.b || ''), p.pin, p.antal));
+    if (p.a === 'in') return svar(slappIn(String(p.b || ''), p.pin));
     if (p.a === 'lage') return svar(lage(p.pin));
     return svar({ ok: false, fel: 'fråga' });
   } catch (err) {

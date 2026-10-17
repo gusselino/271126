@@ -18,10 +18,10 @@ PIN = "1234"
 
 def ny():
     return {
-        "solo1111": {"namn": "Anna Test", "platser": 1, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
-        "plus1111": {"namn": "Erik Test", "villkor": "en tjej", "platser": 2, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
-        "plus2222": {"namn": "Maja Test", "platser": 3, "sparrad": False, "svar": "", "gaster": [], "inne": 0, "senast": None},
-        "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "svar": "", "gaster": [], "inne": 0, "senast": None},
+        "solo1111": {"namn": "Anna Test", "platser": 1, "sparrad": False, "svar": "", "gaster": [], "inne": {}, "ord": ""},
+        "plus1111": {"namn": "Erik Test", "villkor": "en tjej", "platser": 2, "sparrad": False, "svar": "", "gaster": [], "inne": {}, "ord": ""},
+        "plus2222": {"namn": "Maja Test", "platser": 3, "sparrad": False, "svar": "", "gaster": [], "inne": {}, "ord": ""},
+        "sparr111": {"namn": "Test Spärrad", "platser": 1, "sparrad": True, "svar": "", "gaster": [], "inne": {}, "ord": ""},
     }
 
 
@@ -30,7 +30,7 @@ LAS = threading.Lock()
 
 
 def rakna():
-    return {"inne": sum(l["inne"] for l in LANKAR.values()),
+    return {"inne": sum(len(l["inne"]) for l in LANKAR.values()),
             "totalt": sum(l["platser"] for l in LANKAR.values() if l["svar"] == "ja" and not l["sparrad"])}
 
 
@@ -38,10 +38,15 @@ def visa(kod):
     l = LANKAR.get(kod)
     if not l or l["sparrad"]:
         return {"ok": False, "fel": "okänd"}
-    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"], "gaster": l["gaster"], "villkor": l.get("villkor", "")}
+    return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"], "gaster": l["gaster"], "villkor": l.get("villkor", ""),
+            "ord": l["ord"], "inslappta": l["inne"]}
 
 
-def svara(kod, svar):
+def stada_ord(o):
+    return "".join(c for c in str(o or "") if c.isalpha())[:14].upper()
+
+
+def svara(kod, svar, ord=""):
     if svar not in ("ja", "kanske", "nej"):
         return {"ok": False, "fel": "svar"}
     with LAS:
@@ -49,7 +54,10 @@ def svara(kod, svar):
         if not l or l["sparrad"]:
             return {"ok": False, "fel": "okänd"}
         l["svar"] = svar
-        return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": svar, "gaster": l["gaster"]}
+        if stada_ord(ord):
+            l["ord"] = stada_ord(ord)
+        return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": svar, "gaster": l["gaster"],
+                "villkor": l.get("villkor", ""), "ord": l["ord"], "inslappta": l["inne"]}
 
 
 def spara_gaster(kod, gaster):
@@ -63,34 +71,24 @@ def spara_gaster(kod, gaster):
         return {"ok": True, "namn": l["namn"], "platser": l["platser"], "svar": l["svar"], "gaster": l["gaster"]}
 
 
-def slapp_in(kod, pin, antal):
+def slapp_in(biljett, pin):
     if str(pin) != PIN:
         return {"ok": False, "fel": "pin"}
+    kod, _, p = str(biljett).partition("-")
+    plats = int(p) if p.isdigit() else 1
     with LAS:
         l = LANKAR.get(kod)
         r = rakna()
-        if not l:
+        if not l or plats < 1 or plats > l["platser"]:
             return {"ok": False, "fel": "okänd", **r}
-        bas = {"namn": l["namn"], "platser": l["platser"], "gaster": l["gaster"], **r}
+        bas = {"namn": l["namn"] if plats == 1 else (l["gaster"][plats - 2] if len(l["gaster"]) >= plats - 1 else ""),
+               "vard": "" if plats == 1 else l["namn"], "ord": l["ord"], "plats": plats, "platser": l["platser"], **r}
         if l["sparrad"]:
             return {"ok": False, "fel": "spärrad", **bas}
-        kvar = l["platser"] - l["inne"]
-        if kvar <= 0:
-            return {"ok": False, "fel": "använd", "tid": l["senast"] or "", **bas}
-        try:
-            n = float(antal or 0)
-        except (TypeError, ValueError):
-            n = 0
-        if not n and l["platser"] == 1:
-            n = 1
-        if not n:
-            return {"ok": True, "klar": False, "redan": l["inne"], "kvar": kvar, **bas}
-        if n < 1 or n > kvar or n != int(n):
-            return {"ok": False, "fel": "antal", "kvar": kvar, **bas}
-        n = int(n)
-        l["inne"] += n
-        l["senast"] = datetime.now().strftime("%H:%M")
-        return {"ok": True, "klar": True, "antal": n, "kvar": kvar - n, **bas, "inne": r["inne"] + n}
+        if str(plats) in l["inne"]:
+            return {"ok": False, "fel": "använd", "tid": l["inne"][str(plats)], **bas}
+        l["inne"][str(plats)] = datetime.now().strftime("%H:%M")
+        return {"ok": True, "klar": True, "pabiljetten": len(l["inne"]), **bas, "inne": r["inne"] + 1}
 
 
 def lage(pin):
@@ -133,13 +131,9 @@ class H(SimpleHTTPRequestHandler):
         if p.get("a") == "gaster":
             return self._json(spara_gaster(str(p.get("k", "")), p.get("gaster")))
         if p.get("a") == "svar":
-            ut = svara(str(p.get("k", "")), str(p.get("svar", "")))
-            if ut.get("ok") and p.get("ord"):
-                LANKAR[p["k"]]["ord"] = str(p["ord"])[:14]
-                ut["ord"] = LANKAR[p["k"]]["ord"]
-            return self._json(ut)
+            return self._json(svara(str(p.get("k", "")), str(p.get("svar", "")), p.get("ord")))
         if p.get("a") == "in":
-            return self._json(slapp_in(str(p.get("b", "")), p.get("pin"), p.get("antal")))
+            return self._json(slapp_in(str(p.get("b", "")), p.get("pin")))
         if p.get("a") == "lage":
             return self._json(lage(p.get("pin")))
         self._json({"ok": False, "fel": "fråga"})

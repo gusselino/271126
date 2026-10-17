@@ -44,17 +44,16 @@ body.vakt main{max-width:none;padding:0}
 #ram{position:fixed;left:50%;top:44%;width:64vmin;height:64vmin;transform:translate(-50%,-50%);border:2px solid #fff;pointer-events:none}
 #topp{position:fixed;left:0;right:0;top:0;padding:14px 16px;display:flex;justify-content:space-between;background:#000;z-index:3}
 #botten{position:fixed;left:0;right:0;bottom:0;padding:12px 16px 20px;background:#000;z-index:3}
-#svar,#val{position:fixed;inset:0;z-index:5;display:none;flex-direction:column;justify-content:center;padding:26px}
+#svar{position:fixed;inset:0;z-index:5;display:none;flex-direction:column;justify-content:center;padding:26px}
+#svar .ord{display:none;margin-top:26px;padding-top:16px;border-top:2px solid currentColor}
+#svar.medord .ord{display:block}
+#svar .ordrubrik{display:block;font-size:13px;letter-spacing:.14em}
+#svar .ordet{display:block;font-size:46px;line-height:1;letter-spacing:-.02em;margin-top:6px;word-break:break-word}
 #svar.ja{display:flex;background:#19e36b;color:#000}
 #svar.nej{display:flex;background:#ff3b30;color:#fff}
-#svar .stor,#val .stor{font-size:54px;line-height:.9;letter-spacing:-.04em}
+#svar .stor{font-size:54px;line-height:.9;letter-spacing:-.04em}
 .vem{font-size:30px;line-height:1.05;letter-spacing:-.02em;margin-top:20px;word-break:break-word}
 .mer{margin-top:14px}
-#val{background:#000}
-#val.pa{display:flex}
-#val .knappar{margin-top:26px}
-#val button{padding:22px 13px;font-size:17px}
-#val button.alla{background:#19e36b}
 #pin{position:fixed;inset:0;z-index:9;background:#000;padding:28px 22px;display:none;flex-direction:column;justify-content:center}
 
 /* gästsidan: terminalen */
@@ -210,3 +209,16 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .kk-knapp.blink{animation:kkblink 1.4s ease-in-out infinite}
 @keyframes kkblink{50%{background:#c8f7c5;color:#050505;text-shadow:none;box-shadow:0 0 18px rgba(150,255,170,.6)}}
 .term .kk-knapp:active{background:#c8f7c5;color:#050505}
+
+/* passerkortet: en QR-kod per person, svep i sidled */
+.term .karusell{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 16px;margin:0 -16px;padding:0 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.term .karusell::-webkit-scrollbar{display:none}
+.term .kortbit{flex:0 0 100%;scroll-snap-align:start;min-width:0}
+.term .kortbit .rubrik{margin-bottom:6px;opacity:.85}
+.term .kortbit .rubrik.tom{color:#ff6b5e;opacity:1}
+.term .kortbit .qr{position:relative}
+.term .kortbit.anvand .qr svg{opacity:.18}
+.term .stampel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;letter-spacing:.06em;color:#ff3b30;text-shadow:none}
+.term .stampel::before{content:'';position:absolute;left:12%;right:12%;top:40%;bottom:40%;border:3px solid #ff3b30;transform:rotate(-8deg)}
+.term .prickar{text-align:center;letter-spacing:.2em;margin:2px 0 4px;opacity:.8}
+.term .lista .post{cursor:pointer}

@@ -6,16 +6,20 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#050505">
 <title>271126</title>
-<link rel="stylesheet" href="stil.css?v=202610162059">
+<link rel="stylesheet" href="stil.css?v=202610171200">
 </head>
 <body class="term">
 <main id="m"></main>
-<script src="qrcode.js?v=202610162059"></script>
-<script src="app.js?v=202610162059"></script>
-<script src="karta.js?v=202610162059"></script>
+<script src="qrcode.js?v=202610171200"></script>
+<script src="app.js?v=202610171200"></script>
+<script src="karta.js?v=202610171200"></script>
 <script>
 const m = document.getElementById('m');
-const kod = (location.search.slice(1).split('&')[0]).toLowerCase().replace(/[^a-z0-9]/g, '');
+// ?kod är den inbjudnas länk. ?kod-2, ?kod-3 är länkar som den inbjudna skickar till sina gäster.
+const fraga0 = location.search.slice(1).split('&')[0].toLowerCase();
+const kod = fraga0.split('-')[0].replace(/[^a-z0-9]/g, '');
+const gastPlats = Number(fraga0.split('-')[1]) >= 2 ? Number(fraga0.split('-')[1]) : 0;
+const biljettAdress = i => location.origin + '/v.html?b=' + kod + '-' + i;
 const ALDER = 25, LOGN = 29;   // det sanna svaret och det som ledtråden lurar fram (född 1997)
 let favoritord = '', lank = null, sprak = null, snabbt = false, klocka = null;
 try { sprak = localStorage.getItem('sprak'); } catch (e) {}
@@ -43,8 +47,9 @@ const T = {
     tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
     vem: n => n === 2 ? 'vem tar du med? förnamn och efternamn.' : 'vilka tar du med? förnamn och efternamn.',
     valfritt: 'går att hoppa över och fylla i senare.', gast: i => `gäst ${i}`, sparaNamn: 'SPARA NAMNEN', hoppa: 'HOPPA ÖVER',
-    villkorRad: 'villkor för ditt plus', gastlista: 'PÅ DIN BILJETT', namnSaknas: 'namn saknas', enKod: 'en kod för er alla.',
-    olikaTider: 'kommer ni vid olika tider? skicka en skärmbild av koden.', laggTill: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', sparar: 'sparar ...',
+    villkorRad: 'villkor för ditt plus', gastlista: 'PÅ DIN BILJETT', namnSaknas: 'namn saknas', enKod: 'en kod per person. svep för att se alla.',
+    olikaTider: 'skicka varje gäst sin egen kod, så kan ni komma när ni vill.',
+    skickaTill: n => n ? `SKICKA TILL ${n}` : 'SKICKA KODEN', inneKl: k => `INNE ${k}`, gastTill: n => `gäst till ${n}`, delaText: n => `271126. din biljett, från ${n}:`, kopierad: 'länken är kopierad. klistra in den i ett meddelande.', inaktiv: 'biljetten är inte aktiv än.', svep: 'svep', laggTill: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', sparar: 'sparar ...',
     passerkort: 'PASSERKORT', info: 'INFO',
     pers: n => n === 1 ? 'BARA DU' : `DU + ${n - 1}`,
     galler: n => n === 1 ? 'biljetten gäller 1 person.' : `biljetten gäller ${n} personer: dig och ${TAL.sv[n - 1] || n - 1} till.`,
@@ -74,8 +79,9 @@ const T = {
     tidigare: s => `your last answer: ${s}. you can answer again.`,
     vem: n => n === 2 ? 'who are you bringing? first and last name.' : 'who are you bringing? first and last names.',
     valfritt: 'you can skip this and fill it in later.', gast: i => `guest ${i}`, sparaNamn: 'SAVE NAMES', hoppa: 'SKIP',
-    villkorRad: 'condition for your plus', gastlista: 'ON YOUR TICKET', namnSaknas: 'name missing', enKod: 'one code for all of you.',
-    olikaTider: 'arriving at different times? send them a screenshot of the code.', laggTill: 'ADD / CHANGE GUEST NAMES', sparar: 'saving ...',
+    villkorRad: 'condition for your plus', gastlista: 'ON YOUR TICKET', namnSaknas: 'name missing', enKod: 'one code per person. swipe to see them all.',
+    olikaTider: 'send each guest their own code, then you can arrive whenever you like.',
+    skickaTill: n => n ? `SEND TO ${n}` : 'SEND THE CODE', inneKl: k => `IN ${k}`, gastTill: n => `guest of ${n}`, delaText: n => `271126. your ticket, from ${n}:`, kopierad: 'link copied. paste it into a message.', inaktiv: 'this ticket is not active yet.', svep: 'swipe', laggTill: 'ADD / CHANGE GUEST NAMES', sparar: 'saving ...',
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUST YOU' : `YOU + ${n - 1}`,
     galler: n => n === 1 ? 'the ticket is valid for 1 person.' : `the ticket is valid for ${n} people: you and ${TAL.en[n - 1] || n - 1} more.`,
@@ -105,8 +111,9 @@ const T = {
     tidigare: s => `tu última respuesta: ${s}. puedes responder de nuevo.`,
     vem: n => n === 2 ? '¿a quién traes? nombre y apellido.' : '¿a quiénes traes? nombre y apellido.',
     valfritt: 'puedes saltarlo y rellenarlo más tarde.', gast: i => `invitado ${i}`, sparaNamn: 'GUARDAR NOMBRES', hoppa: 'SALTAR',
-    villkorRad: 'condición para tu acompañante', gastlista: 'EN TU ENTRADA', namnSaknas: 'falta el nombre', enKod: 'un código para todos.',
-    olikaTider: '¿llegáis a distintas horas? envíales una captura del código.', laggTill: 'AÑADIR / CAMBIAR NOMBRES', sparar: 'guardando ...',
+    villkorRad: 'condición para tu acompañante', gastlista: 'EN TU ENTRADA', namnSaknas: 'falta el nombre', enKod: 'un código por persona. desliza para verlos todos.',
+    olikaTider: 'envía a cada invitado su propio código y podréis llegar cuando queráis.',
+    skickaTill: n => n ? `ENVIAR A ${n}` : 'ENVIAR EL CÓDIGO', inneKl: k => `DENTRO ${k}`, gastTill: n => `invitado de ${n}`, delaText: n => `271126. tu entrada, de ${n}:`, kopierad: 'enlace copiado. pégalo en un mensaje.', inaktiv: 'esta entrada aún no está activa.', svep: 'desliza', laggTill: 'AÑADIR / CAMBIAR NOMBRES', sparar: 'guardando ...',
     passerkort: 'PASE', info: 'INFO',
     pers: n => n === 1 ? 'SOLO TÚ' : `TÚ + ${n - 1}`,
     galler: n => n === 1 ? 'la entrada vale para 1 persona.' : `la entrada vale para ${n} personas: tú y ${TAL.es[n - 1] || n - 1} más.`,
@@ -136,8 +143,9 @@ const T = {
     tidigare: s => `ta dernière réponse : ${s}. tu peux répondre à nouveau.`,
     vem: n => n === 2 ? 'qui amènes-tu ? prénom et nom.' : 'qui amènes-tu ? prénoms et noms.',
     valfritt: 'tu peux passer et le remplir plus tard.', gast: i => `invité ${i}`, sparaNamn: 'ENREGISTRER LES NOMS', hoppa: 'PASSER',
-    villkorRad: 'condition pour ton accompagnant', gastlista: 'SUR TON BILLET', namnSaknas: 'nom manquant', enKod: 'un seul code pour vous tous.',
-    olikaTider: 'vous arrivez à des heures différentes ? envoie-leur une capture du code.', laggTill: 'AJOUTER / MODIFIER LES NOMS', sparar: 'enregistrement ...',
+    villkorRad: 'condition pour ton accompagnant', gastlista: 'SUR TON BILLET', namnSaknas: 'nom manquant', enKod: 'un code par personne. fais glisser pour tous les voir.',
+    olikaTider: 'envoie à chaque invité son propre code, vous pourrez arriver quand vous voulez.',
+    skickaTill: n => n ? `ENVOYER À ${n}` : 'ENVOYER LE CODE', inneKl: k => `ENTRÉ ${k}`, gastTill: n => `invité de ${n}`, delaText: n => `271126. ton billet, de la part de ${n} :`, kopierad: 'lien copié. colle-le dans un message.', inaktiv: 'ce billet n’est pas encore actif.', svep: 'glisser', laggTill: 'AJOUTER / MODIFIER LES NOMS', sparar: 'enregistrement ...',
     passerkort: 'PASS', info: 'INFO',
     pers: n => n === 1 ? 'JUSTE TOI' : `TOI + ${n - 1}`,
     galler: n => n === 1 ? 'le billet est valable pour 1 personne.' : `le billet est valable pour ${n} personnes : toi et ${TAL.fr[n - 1] || n - 1} autres.`,
@@ -444,27 +452,31 @@ async function svaraInte(v) {
 }
 
 // ---------------------------------------------------------------- sida 2: passerkortet
-function sparaBildText() {
+const personNamn = i => i === 1 ? lank.namn : (lank.gaster || [])[i - 2] || '';
+const fornamn = n => String(n || '').split(' ')[0].toUpperCase();
+
+function sparaBildText(i) {
   const n = lank.platser;
-  return [t().pers(n), `${lank.namn.toUpperCase()}${n > 1 ? ' ' + t().plus(n).toUpperCase() : ''}`, t().galler(n), '',
+  return [(personNamn(i) || t().gastTill(lank.namn)).toUpperCase(),
+    n > 1 ? `${i}/${n}` + (i > 1 ? '  ' + t().gastTill(lank.namn) : '') : t().galler(1), '',
     t().dag, ...FEST.program.map(([tid, vad]) => `${tid}  ${akt(vad)}`), `${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`];
 }
 
-async function sparaBild(tips) {
+async function sparaBild(tips, plats) {
   const B = 1080, H = 1720, c = document.createElement('canvas');
   c.width = B; c.height = H;
   const g = c.getContext('2d');
   g.fillStyle = '#050505'; g.fillRect(0, 0, B, H);
   g.fillStyle = '#c8f7c5'; g.font = '40px Menlo, monospace';
   g.fillText(`271126 // ${t().passerkort}`, 70, 110);
-  const q = qrcode(0, 'M'); q.addData(location.origin + '/v.html?b=' + kod); q.make();
+  const q = qrcode(0, 'M'); q.addData(biljettAdress(plats)); q.make();
   const antal = q.getModuleCount(), ruta = Math.floor(860 / (antal + 6)), sida = ruta * (antal + 6), x0 = (B - sida) / 2, y0 = 160;
   g.fillStyle = '#fff'; g.fillRect(x0, y0, sida, sida);
   g.fillStyle = '#000';
   for (let y = 0; y < antal; y++) for (let x = 0; x < antal; x++) if (q.isDark(y, x)) g.fillRect(x0 + (x + 3) * ruta, y0 + (y + 3) * ruta, ruta, ruta);
   let y = y0 + sida + 110;
-  sparaBildText().forEach((r, i) => {
-    g.fillStyle = i === 0 ? '#eaffea' : '#c8f7c5'; g.font = (i === 0 ? '76px' : '38px') + ' Menlo, monospace';
+  sparaBildText(plats).forEach((r, i) => {
+    g.fillStyle = i === 0 ? '#eaffea' : '#c8f7c5'; g.font = (i === 0 ? (r.length > 20 ? '54px' : '76px') : '38px') + ' Menlo, monospace';
     g.fillText(r, 70, y); y += i === 0 ? 86 : 54;
   });
   const blob = await new Promise(r => c.toBlob(r, 'image/png'));
@@ -497,6 +509,7 @@ const IKON = {
   karta: '<path d="M12 21s-7-6.3-7-11.5A7 7 0 0 1 19 9.5C19 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
   person: '<circle cx="12" cy="7" r="4"/><path d="M3.5 22c0-4.7 3.8-8.5 8.5-8.5s8.5 3.8 8.5 8.5"/>',
   penna: '<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+  skicka: '<path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>',
 };
 function ikon(namn, klass) {
   const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -525,30 +538,84 @@ function visaKladkod() {
 }
 function settKladkod() { try { return localStorage.getItem('kk:' + kod) === '1'; } catch (e) { return false; } }
 
+// En QR-kod per person. Den som redan har gått in får en stämpel över koden.
+function kortbit(i) {
+  const n = lank.platser, namn = personNamn(i), inne = (lank.inslappta || {})[i];
+  const qr = el('div', { class: 'qr' }, qrBild(biljettAdress(i)), ...(inne ? [el('div', { class: 'stampel' }, t().inneKl(inne))] : []));
+  return el('div', { class: 'kortbit' + (inne ? ' anvand' : '') },
+    rad((n > 1 ? `${i}/${n}  ` : '') + (namn ? namn.toUpperCase() : (i > 1 ? t().namnSaknas : '')), 'rubrik' + (namn ? '' : ' tom')), qr);
+}
+
+async function skickaTillGast(i, tips) {
+  const url = location.origin + '/?' + kod + '-' + i, text = t().delaText(fornamn(lank.namn));
+  if (navigator.share) {
+    try { await navigator.share({ text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(text + ' ' + url); tips.textContent = '  ' + t().kopierad; }
+  catch (e) { tips.textContent = '  ' + url; }
+}
+
 function visaKort() {
   clearInterval(klocka);
   const n = lank.platser, tips = el('div', { class: 'l svag tips' });
   const saknas = n > 1 && (lank.gaster || []).length < n - 1;
+  let aktiv = 1;
+  const bitar = Array.from({ length: n }, (_, i) => kortbit(i + 1));
+  const karusell = el('div', { class: 'karusell' }, ...bitar);
+  const prickar = rad('', 'prickar');
+  const skicka = el('div', { class: 'rutor' });
+  const rita = () => {
+    prickar.textContent = n > 1 ? bitar.map((_, i) => i + 1 === aktiv ? '●' : '○').join(' ') + (aktiv < n ? `   ${t().svep} →` : '') : '';
+    skicka.replaceChildren(...(aktiv > 1 ? [el('button', { onclick: () => skickaTillGast(aktiv, tips) }, ikon('skicka'), el('span', {}, t().skickaTill(fornamn(personNamn(aktiv)))))] : []));
+  };
+  karusell.addEventListener('scroll', () => {
+    const ny = Math.round(karusell.scrollLeft / (bitar[0].offsetWidth + 16)) + 1;
+    if (ny !== aktiv) { aktiv = Math.min(n, Math.max(1, ny)); rita(); }
+  }, { passive: true });
+  const visaBit = i => karusell.scrollTo({ left: (i - 1) * (bitar[0].offsetWidth + 16), behavior: 'smooth' });
+  rita();
   m.className = '';
   m.replaceChildren(
     topp(t().passerkort, sprakknapp(visaKort)),
-    el('div', { class: 'qr' }, qrBild(location.origin + '/v.html?b=' + kod)),
+    karusell, prickar, skicka,
     rad(t().pers(n), 'stor'),
-    rad('\u00a0'),
+    ...(n > 1 ? [rad('> ' + t().enKod), rad('> ' + t().olikaTider, 'svag')] : []),
+    rad(' '),
     rad(t().gastlista + (lank.villkor && n > 1 ? `  (plus: ${lank.villkor})` : ''), 'rubrik'),
     el('div', { class: 'lista' }, ...Array.from({ length: n }, (_, i) => {
-      const namn = i === 0 ? lank.namn : (lank.gaster || [])[i - 1];
-      return el('div', { class: 'post' + (namn ? '' : ' tom') }, el('span', { class: 'pnr' }, String(i + 1)), el('span', {}, namn ? namn.toUpperCase() : t().namnSaknas));
+      const namn = personNamn(i + 1), inne = (lank.inslappta || {})[i + 1];
+      return el('div', { class: 'post' + (namn ? '' : ' tom'), onclick: () => visaBit(i + 1) }, el('span', { class: 'pnr' }, String(i + 1)),
+        el('span', {}, (namn ? namn.toUpperCase() : t().namnSaknas) + (inne ? `  · ${t().inneKl(inne)}` : '')));
     })),
-    ...(lank.ord ? [rad('\u00a0'), rad(`> ${t().dittOrd}: ${lank.ord}`, 'stark')] : []),
+    ...(lank.ord ? [rad(' '), rad(`> ${t().dittOrd}: ${lank.ord}`, 'stark')] : []),
     el('button', { class: 'kk-knapp' + (settKladkod() ? '' : ' blink'), onclick: () => { location.hash = 'kladkod'; } }, ikon('galge'), el('span', {}, t().seKladkod)),
-    ...(n > 1 ? [rad('\u00a0'), rad('> ' + t().enKod), rad('> ' + t().olikaTider, 'svag')] : []),
     ...(n > 1 ? [el('div', { class: 'rutor gastknapp' + (saknas ? ' saknas' : '') },
             el('button', { onclick: async e => { const plats = e.currentTarget.parentElement; plats.className = 'gastknapp'; plats.replaceChildren(); await gastFormular(plats); visaKort(); } }, ikon('penna'), el('span', {}, t().laggTill)))] : []),
-    rad(' '),
+    rad(' '),
     rad('> ' + t().spara),
     el('div', { class: 'rutor' },
-      el('button', { onclick: () => sparaBild(tips) }, ikon('bild'), el('span', {}, t().bild)),
+      el('button', { onclick: () => sparaBild(tips, aktiv) }, ikon('bild'), el('span', {}, t().bild)),
+      el('button', { onclick: kalender }, ikon('kalender'), el('span', {}, t().kal))),
+    tips,
+    el('button', { class: 'stor-knapp gron', onclick: () => { location.hash = 'info'; } }, ikon('karta'), el('span', {}, t().infoknapp)));
+  window.scrollTo(0, 0);
+}
+
+// Gästens egen länk (?kod-2): bara den egna koden, klädkoden och infon.
+function visaGastKort() {
+  clearInterval(klocka);
+  const i = gastPlats, tips = el('div', { class: 'l svag tips' }), namn = personNamn(i);
+  m.className = '';
+  m.replaceChildren(
+    topp(t().passerkort, sprakknapp(visaGastKort)),
+    kortbit(i),
+    rad(namn ? namn.toUpperCase() : t().gastTill(lank.namn), 'stor'),
+    ...(namn ? [rad('> ' + t().gastTill(lank.namn))] : []),
+    el('button', { class: 'kk-knapp' + (settKladkod() ? '' : ' blink'), onclick: () => { location.hash = 'kladkod'; } }, ikon('galge'), el('span', {}, t().seKladkod)),
+    rad(' '),
+    rad('> ' + t().spara),
+    el('div', { class: 'rutor' },
+      el('button', { onclick: () => sparaBild(tips, i) }, ikon('bild'), el('span', {}, t().bild)),
       el('button', { onclick: kalender }, ikon('kalender'), el('span', {}, t().kal))),
     tips,
     el('button', { class: 'stor-knapp gron', onclick: () => { location.hash = 'info'; } }, ikon('karta'), el('span', {}, t().infoknapp)));
@@ -582,6 +649,7 @@ function visaSida() {
   if (!lank || lank.svar !== 'ja') return;
   if (location.hash === '#info') visaInfo();
   else if (location.hash === '#kladkod') visaKladkod();
+  else if (gastPlats) visaGastKort();
   else visaKort();
 }
 window.addEventListener('hashchange', visaSida);
@@ -598,9 +666,13 @@ async function start() {
   lank = await hamtat;
   clearInterval(prickar);
   if (!lank) return skriv('> ' + t().kontakt, 'fel');
-  if (!lank.ok) return skriv('> ' + t().ingen, 'svag');
+  if (!lank.ok || (gastPlats && gastPlats > lank.platser)) return skriv('> ' + t().ingen, 'svag');
   anslut.append(' ' + t().ok);
   await vila(300);
+  if (gastPlats) {
+    if (lank.svar !== 'ja') return skriv('> ' + t().inaktiv, 'svag');
+    location.hash = 'kort'; return visaSida();
+  }
   if (lank.svar === 'ja') { await vila(250); location.hash = 'kort'; return visaSida(); }
   if (lank.svar) await skriv('> ' + t().tidigare(t()[lank.svar] || lank.svar), 'svag');
   const fran = await inbjudan();
