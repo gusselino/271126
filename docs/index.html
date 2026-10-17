@@ -6,13 +6,13 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#050505">
 <title>271126</title>
-<link rel="stylesheet" href="stil.css?v=202610171700">
+<link rel="stylesheet" href="stil.css?v=202610171800">
 </head>
 <body class="term">
 <main id="m"></main>
-<script src="qrcode.js?v=202610171700"></script>
-<script src="app.js?v=202610171700"></script>
-<script src="karta.js?v=202610171700"></script>
+<script src="qrcode.js?v=202610171800"></script>
+<script src="app.js?v=202610171800"></script>
+<script src="karta.js?v=202610171800"></script>
 <script>
 const m = document.getElementById('m');
 // ?kod är den inbjudnas länk. ?kod-2, ?kod-3 är länkar som den inbjudna skickar till sina gäster.
@@ -47,7 +47,7 @@ const T = {
     tidigare: s => `ditt senaste svar: ${s}. du får svara igen.`,
     vem: n => n === 2 ? 'vem tar du med? förnamn och efternamn.' : 'vilka tar du med? förnamn och efternamn.',
     valfritt: 'går att hoppa över och fylla i senare.', gast: i => `gäst ${i}`, sparaNamn: 'SPARA NAMNEN', hoppa: 'HOPPA ÖVER',
-    villkorRad: 'villkor för ditt plus', gastlista: 'PÅ DIN BILJETT', namnSaknas: 'namn saknas', enKod: 'en kod per person. svep för att se alla.',
+    villkorRad: 'villkor för ditt plus', gastlista: 'PÅ DIN BILJETT', namnSaknas: 'namn saknas', enKod: 'en kod per person. skicka varje gäst sin egen.', faTaMed: v => `du får ta med ${v}.`, sallskapRubrik: n => `DITT SÄLLSKAP · DU + ${n - 1}`, sparaBiljett: (namn, i) => namn ? `SPARA ${/[sxz]$/i.test(namn) ? namn : namn + 'S'} BILJETT` : `SPARA BILJETT ${i}`,
     olikaTider: 'skicka varje gäst sin egen kod, så kan ni komma när ni vill.',
     skickaTill: n => n ? `SKICKA TILL ${n}` : 'SKICKA KODEN', inneKl: k => `INNE ${k}`, gastTill: n => `gäst till ${n}`, delaText: n => `271126. din biljett, från ${n}:`, kopierad: 'länken är kopierad. klistra in den i ett meddelande.', inaktiv: 'biljetten är inte aktiv än.', svep: 'svep', andraKort: 'ÄNDRA', klarKort: 'KLAR', laggKort: 'LÄGG TILL', laggTill: 'LÄGG TILL / ÄNDRA NAMN PÅ GÄSTER', sparar: 'sparar ...',
     passerkort: 'PASSERKORT', info: 'INFO',
@@ -79,7 +79,7 @@ const T = {
     tidigare: s => `your last answer: ${s}. you can answer again.`,
     vem: n => n === 2 ? 'who are you bringing? first and last name.' : 'who are you bringing? first and last names.',
     valfritt: 'you can skip this and fill it in later.', gast: i => `guest ${i}`, sparaNamn: 'SAVE NAMES', hoppa: 'SKIP',
-    villkorRad: 'condition for your plus', gastlista: 'ON YOUR TICKET', namnSaknas: 'name missing', enKod: 'one code per person. swipe to see them all.',
+    villkorRad: 'condition for your plus', gastlista: 'ON YOUR TICKET', namnSaknas: 'name missing', enKod: 'one code per person. send each guest their own.', faTaMed: v => `you can bring ${v}.`, sallskapRubrik: n => `YOUR COMPANY · YOU + ${n - 1}`, sparaBiljett: (namn, i) => namn ? `SAVE ${namn}’S TICKET` : `SAVE TICKET ${i}`,
     olikaTider: 'send each guest their own code, then you can arrive whenever you like.',
     skickaTill: n => n ? `SEND TO ${n}` : 'SEND THE CODE', inneKl: k => `IN ${k}`, gastTill: n => `guest of ${n}`, delaText: n => `271126. your ticket, from ${n}:`, kopierad: 'link copied. paste it into a message.', inaktiv: 'this ticket is not active yet.', svep: 'swipe', andraKort: 'EDIT', klarKort: 'DONE', laggKort: 'ADD', laggTill: 'ADD / CHANGE GUEST NAMES', sparar: 'saving ...',
     passerkort: 'PASS', info: 'INFO',
@@ -111,7 +111,7 @@ const T = {
     tidigare: s => `tu última respuesta: ${s}. puedes responder de nuevo.`,
     vem: n => n === 2 ? '¿a quién traes? nombre y apellido.' : '¿a quiénes traes? nombre y apellido.',
     valfritt: 'puedes saltarlo y rellenarlo más tarde.', gast: i => `invitado ${i}`, sparaNamn: 'GUARDAR NOMBRES', hoppa: 'SALTAR',
-    villkorRad: 'condición para tu acompañante', gastlista: 'EN TU ENTRADA', namnSaknas: 'falta el nombre', enKod: 'un código por persona. desliza para verlos todos.',
+    villkorRad: 'condición para tu acompañante', gastlista: 'EN TU ENTRADA', namnSaknas: 'falta el nombre', enKod: 'un código por persona. envía a cada invitado el suyo.', faTaMed: v => `puedes traer ${v}.`, sallskapRubrik: n => `TU COMPAÑÍA · TÚ + ${n - 1}`, sparaBiljett: (namn, i) => namn ? `GUARDAR LA ENTRADA DE ${namn}` : `GUARDAR ENTRADA ${i}`,
     olikaTider: 'envía a cada invitado su propio código y podréis llegar cuando queráis.',
     skickaTill: n => n ? `ENVIAR A ${n}` : 'ENVIAR EL CÓDIGO', inneKl: k => `DENTRO ${k}`, gastTill: n => `invitado de ${n}`, delaText: n => `271126. tu entrada, de ${n}:`, kopierad: 'enlace copiado. pégalo en un mensaje.', inaktiv: 'esta entrada aún no está activa.', svep: 'desliza', andraKort: 'CAMBIAR', klarKort: 'LISTO', laggKort: 'AÑADIR', laggTill: 'AÑADIR / CAMBIAR NOMBRES', sparar: 'guardando ...',
     passerkort: 'PASE', info: 'INFO',
@@ -143,7 +143,7 @@ const T = {
     tidigare: s => `ta dernière réponse : ${s}. tu peux répondre à nouveau.`,
     vem: n => n === 2 ? 'qui amènes-tu ? prénom et nom.' : 'qui amènes-tu ? prénoms et noms.',
     valfritt: 'tu peux passer et le remplir plus tard.', gast: i => `invité ${i}`, sparaNamn: 'ENREGISTRER LES NOMS', hoppa: 'PASSER',
-    villkorRad: 'condition pour ton accompagnant', gastlista: 'SUR TON BILLET', namnSaknas: 'nom manquant', enKod: 'un code par personne. fais glisser pour tous les voir.',
+    villkorRad: 'condition pour ton accompagnant', gastlista: 'SUR TON BILLET', namnSaknas: 'nom manquant', enKod: 'un code par personne. envoie à chaque invité le sien.', faTaMed: v => `tu peux amener ${v}.`, sallskapRubrik: n => `TA COMPAGNIE · TOI + ${n - 1}`, sparaBiljett: (namn, i) => namn ? `ENREGISTRER LE BILLET DE ${namn}` : `ENREGISTRER BILLET ${i}`,
     olikaTider: 'envoie à chaque invité son propre code, vous pourrez arriver quand vous voulez.',
     skickaTill: n => n ? `ENVOYER À ${n}` : 'ENVOYER LE CODE', inneKl: k => `ENTRÉ ${k}`, gastTill: n => `invité de ${n}`, delaText: n => `271126. ton billet, de la part de ${n} :`, kopierad: 'lien copié. colle-le dans un message.', inaktiv: 'ce billet n’est pas encore actif.', svep: 'glisser', andraKort: 'MODIFIER', klarKort: 'OK', laggKort: 'AJOUTER', laggTill: 'AJOUTER / MODIFIER LES NOMS', sparar: 'enregistrement ...',
     passerkort: 'PASS', info: 'INFO',
@@ -254,7 +254,8 @@ function valjSprak() {
 
 async function inbjudan() {
   await skriv(`> ${t().identitet}: ${lank.namn.toUpperCase()}`, 'stark');
-  if (lank.platser > 1) await skriv(`> ${t().sallskap}: ${t().plus(lank.platser)}${lank.villkor ? ' (' + lank.villkor + ')' : ''}`);
+  if (lank.platser > 1) await skriv(`> ${t().sallskap}: ${t().plus(lank.platser)}`);
+  if (lank.platser > 1 && lank.villkor) await skriv('  ' + t().faTaMed(lank.villkor));
   tom();
   await skriv('> ' + t().lana);
   tom();
@@ -458,7 +459,7 @@ const fornamn = n => String(n || '').split(' ')[0].toUpperCase();
 function sparaBildText(i) {
   const n = lank.platser;
   return [(personNamn(i) || t().gastTill(lank.namn)).toUpperCase(),
-    n > 1 ? `${i}/${n}` + (i > 1 ? '  ' + t().gastTill(lank.namn) : '') : t().galler(1), '',
+    ...(i > 1 && personNamn(i) ? [t().gastTill(lank.namn)] : []), '',
     t().dag, ...FEST.program.map(([tid, vad]) => `${tid}  ${akt(vad)}`), `${FEST.adress.toUpperCase()}, ${FEST.plats.toUpperCase()}`];
 }
 
@@ -546,7 +547,7 @@ function kortbit(i) {
   const n = lank.platser, namn = personNamn(i), inne = (lank.inslappta || {})[i];
   const qr = el('div', { class: 'qr' }, qrBild(biljettAdress(i)), ...(inne ? [el('div', { class: 'stampel' }, t().inneKl(inne))] : []));
   return el('div', { class: 'kortbit' + (inne ? ' anvand' : '') },
-    rad((n > 1 ? `${i}/${n}  ` : '') + (namn ? namn.toUpperCase() : (i > 1 ? t().namnSaknas : '')), 'rubrik' + (namn ? '' : ' tom')), qr);
+    rad(namn ? namn.toUpperCase() : (i > 1 ? t().namnSaknas : ''), 'rubrik' + (namn ? '' : ' tom')), qr);
 }
 
 async function skickaTillGast(i, tips) {
@@ -565,8 +566,10 @@ function visaKort() {
   const bitar = Array.from({ length: n }, (_, i) => kortbit(i + 1));
   const karusell = el('div', { class: 'karusell' }, ...bitar);
   const prickar = rad('', 'prickar');
-  const delaRad = el('div', { class: 'rutor' });
+  const delaRad = el('div', { class: 'rutor dela' + (n > 1 ? '' : ' tom') });
+  const sparaText = el('span', {});
   const rita = () => {
+    sparaText.textContent = n > 1 ? t().sparaBiljett(fornamn(personNamn(aktiv)), aktiv) : t().bild;
     prickar.textContent = n > 1 ? bitar.map((_, i) => i + 1 === aktiv ? '●' : '○').join(' ') + (aktiv < n ? `   ${t().svep} →` : '') : '';
     delaRad.replaceChildren(...(aktiv > 1 ? [el('button', { onclick: () => skickaTillGast(aktiv, tips) }, ikon('skicka'), el('span', {}, t().skickaTill(fornamn(personNamn(aktiv)))))] : []));
   };
@@ -579,12 +582,11 @@ function visaKort() {
   m.className = '';
   m.replaceChildren(
     topp(t().passerkort, sprakknapp(visaKort)),
-    karusell, prickar, delaRad,
-    rad(t().pers(n), 'stor'),
-    ...(n > 1 ? [rad('> ' + t().enKod), rad('> ' + t().olikaTider, 'svag')] : []),
-    rad(' '),
-    rad(t().gastlista + (lank.villkor && n > 1 ? `  (plus: ${lank.villkor})` : ''), 'rubrik'),
-    el('div', { class: 'lista' }, ...Array.from({ length: n }, (_, i) => {
+    karusell, prickar,
+    ...(n > 1 ? [rad('> ' + t().enKod, 'svag')] : []),
+    delaRad,
+    ...(n > 1 ? [rad(t().sallskapRubrik(n), 'rubrik')] : []),
+    el('div', { class: 'lista' + (n > 1 ? '' : ' tom') }, ...Array.from({ length: n }, (_, i) => {
       const namn = personNamn(i + 1), inne = (lank.inslappta || {})[i + 1];
       const text = el('span', {}, (namn ? namn.toUpperCase() : t().namnSaknas) + (inne ? `  · ${t().inneKl(inne)}` : ''));
       const post = el('div', { class: 'post' + (namn ? '' : ' tom'), onclick: () => visaBit(i + 1) }, el('span', { class: 'pnr' }, String(i + 1)), text);
@@ -624,7 +626,7 @@ function visaKort() {
     el('button', { class: 'kk-knapp', onclick: () => { location.hash = 'info'; } }, ikon('karta'), el('span', {}, t().infoknapp)),
     rad(' '),
     rad('> ' + t().spara),
-    el('div', { class: 'rutor' }, el('button', { onclick: () => sparaBild(tips, aktiv) }, ikon('bild'), el('span', {}, t().bild))),
+    el('div', { class: 'rutor' }, el('button', { onclick: () => sparaBild(tips, aktiv) }, ikon('bild'), sparaText)),
     tips,
     rad(' '),
     rad('> ' + t().kalRad),
@@ -715,7 +717,6 @@ async function start() {
   let v = fran.svar;
   for (;;) {
     try {
-      if (v === 'ja' && lank.platser > 1) await gastFormular();
       if (v === 'ja') await laddaPasserkort(); else await svaraInte(v);
       break;
     }

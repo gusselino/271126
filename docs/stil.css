@@ -227,3 +227,7 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .radfalt{width:100%;min-width:0;background:#050505;color:#eaffea;border:0;border-bottom:1px solid #eaffea;font:inherit;font-size:16px;
   padding:2px 0;border-radius:0;text-transform:none;letter-spacing:0;text-shadow:inherit;outline:none}
 .term .radfalt::placeholder{color:rgba(200,247,197,.4)}
+.term .rutor.dela{margin:12px 0 26px;min-height:50px}
+.term .rutor.dela.tom,.term .lista.tom{display:none}
+.term .rutor.dela button{background:#c8f7c5;color:#050505;text-shadow:none;border-color:#c8f7c5;font-weight:700}
+.term .rutor.dela button:active{background:#eaffea}
