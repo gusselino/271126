@@ -224,4 +224,6 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .lista .post{cursor:pointer;grid-template-columns:2.2ch 1fr auto;align-items:center}
 .term .post .andra{padding:6px 2px;margin:-6px 0;opacity:.75;font-size:12px;letter-spacing:.06em}
 .term .post .andra.saknas{opacity:1;color:#ff6b5e;animation:pulsera 1.1s steps(1) infinite}
-.term .gastplats:empty{display:none}
+.term .radfalt{width:100%;min-width:0;background:#050505;color:#eaffea;border:0;border-bottom:1px solid #eaffea;font:inherit;font-size:16px;
+  padding:2px 0;border-radius:0;text-transform:none;letter-spacing:0;text-shadow:inherit;outline:none}
+.term .radfalt::placeholder{color:rgba(200,247,197,.4)}
