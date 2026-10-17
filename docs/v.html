@@ -47,11 +47,8 @@ svar.addEventListener('click', stang);
 
 // Vem koden gäller: den inbjudna, en namngiven gäst eller en gäst utan namn.
 const vem = s => s.namn || ('gäst till ' + s.vard);
-function biljettRad(s) {
-  if (s.platser === 1) return '';
-  const gast = s.plats > 1 && s.namn ? `gäst till ${s.vard}. ` : '';
-  return `${gast}${s.pabiljetten || 0} av ${s.platser} på biljetten är inne.`;
-}
+// En namngiven gäst: vems gäst den är. Varje person har en egen kod, så inget mer behövs.
+const biljettRad = s => s.plats > 1 && s.namn ? `gäst till ${s.vard}.` : '';
 
 function tolka(id, s) {
   visaAntal(s);

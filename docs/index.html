@@ -659,6 +659,8 @@ async function start() {
   if (!kod) return skriv('> ' + T.sv.ingen + ' / ' + T.en.ingen, 'svag');
   if (!API) return skriv('> ' + T.sv.stangt, 'svag');
   const hamtat = hamta({ a: 'l', k: kod }).catch(() => null);
+  // En gäst som fått en länk av sin värd hoppar över språkfrågan: telefonens språk gäller, och knappen uppe till höger byter.
+  if (!sprak && gastPlats) sprak = SPRAK.find(k => (navigator.language || '').toLowerCase().startsWith(k)) || 'en';
   if (!sprak) await valjSprak();
   const anslut = await skriv('> ' + t().ansluter);
   // prickar medan vi väntar, så att det syns att något händer
