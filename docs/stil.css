@@ -221,4 +221,7 @@ body.term.skak::before{content:'';position:fixed;inset:0;background:#ff3b30;z-in
 .term .stampel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;letter-spacing:.06em;color:#ff3b30;text-shadow:none}
 .term .stampel::before{content:'';position:absolute;left:12%;right:12%;top:40%;bottom:40%;border:3px solid #ff3b30;transform:rotate(-8deg)}
 .term .prickar{text-align:center;letter-spacing:.2em;margin:2px 0 4px;opacity:.8}
-.term .lista .post{cursor:pointer}
+.term .lista .post{cursor:pointer;grid-template-columns:2.2ch 1fr auto;align-items:center}
+.term .post .andra{padding:6px 2px;margin:-6px 0;opacity:.75;font-size:12px;letter-spacing:.06em}
+.term .post .andra.saknas{opacity:1;color:#ff6b5e;animation:pulsera 1.1s steps(1) infinite}
+.term .gastplats:empty{display:none}
