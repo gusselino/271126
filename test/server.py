@@ -91,6 +91,19 @@ def slapp_in(biljett, pin):
         return {"ok": True, "klar": True, "pabiljetten": len(l["inne"]), **bas, "inne": r["inne"] + 1}
 
 
+def lista(pin):
+    if str(pin) != PIN:
+        return {"ok": False, "fel": "pin"}
+    ut = []
+    for kod, l in LANKAR.items():
+        if l["sparrad"]:
+            continue
+        for p in range(1, l["platser"] + 1):
+            ut.append({"b": f"{kod}-{p}", "namn": l["namn"] if p == 1 else (l["gaster"][p - 2] if len(l["gaster"]) >= p - 1 else ""),
+                       "vard": "" if p == 1 else l["namn"], "svar": l["svar"], "inne": l["inne"].get(str(p), "")})
+    return {"ok": True, "personer": ut, **rakna()}
+
+
 def lage(pin):
     if str(pin) != PIN:
         return {"ok": False, "fel": "pin"}
@@ -134,6 +147,8 @@ class H(SimpleHTTPRequestHandler):
             return self._json(svara(str(p.get("k", "")), str(p.get("svar", "")), p.get("ord")))
         if p.get("a") == "in":
             return self._json(slapp_in(str(p.get("b", "")), p.get("pin")))
+        if p.get("a") == "lista":
+            return self._json(lista(p.get("pin")))
         if p.get("a") == "lage":
             return self._json(lage(p.get("pin")))
         self._json({"ok": False, "fel": "fråga"})

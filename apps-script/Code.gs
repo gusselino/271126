@@ -176,6 +176,19 @@ function slappIn(biljett, pin) {
   } finally { las.releaseLock(); }
 }
 
+/** Alla platser på alla inbjudningar, för vaktens namnsökning. */
+function lista(pin) {
+  if (!pinOk(pin)) return { ok: false, fel: 'pin' };
+  const alla = allaLankar(), ut = [];
+  alla.filter(l => !l.sparrad).forEach(l => {
+    for (let p = 1; p <= l.platser; p++) {
+      ut.push({ b: l.kod + '-' + p, namn: p === 1 ? l.namn : (l.gaster[p - 2] || ''), vard: p === 1 ? '' : l.namn,
+        svar: l.svar, inne: l.platserInne[p] || '' });
+    }
+  });
+  return Object.assign({ ok: true, personer: ut }, rakna(alla));
+}
+
 function lage(pin) {
   if (!pinOk(pin)) return { ok: false, fel: 'pin' };
   return Object.assign({ ok: true }, rakna(allaLankar()));
@@ -219,6 +232,7 @@ function doPost(e) {
     if (p.a === 'gaster') return svar(sparaGaster(String(p.k || ''), p.gaster));
     if (p.a === 'in') return svar(slappIn(String(p.b || ''), p.pin));
     if (p.a === 'lage') return svar(lage(p.pin));
+    if (p.a === 'lista') return svar(lista(p.pin));
     return svar({ ok: false, fel: 'fråga' });
   } catch (err) {
     return svar({ ok: false, fel: 'server', detalj: String(err) });

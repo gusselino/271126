@@ -5,22 +5,31 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="271126 dörr">
+<link rel="apple-touch-icon" href="dorr-ikon.png">
 <title>271126 dörr</title>
-<link rel="stylesheet" href="stil.css?v=202610171800">
+<link rel="stylesheet" href="stil.css?v=202610201000">
 </head>
 <body class="vakt">
 <video id="bild" playsinline muted></video>
 <div id="ram"></div>
-<div id="topp"><span>271126 dörr</span><span id="antal">–</span></div>
-<div id="botten"><span id="lage" class="svag">Startar kameran …</span></div>
+<div id="topp"><div><span id="inne" class="raknare">–</span><span>insläppta</span></div><span id="antal" class="svag"></span></div>
+<div id="botten"><span id="lage" class="svag">Startar kameran …</span><button id="sokknapp">Sök namn</button></div>
+<div id="sok">
+  <div class="sokrad"><input id="sokfalt" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Skriv ett namn"><button id="sokstang" class="tom">Stäng</button></div>
+  <div id="sokrader"></div>
+</div>
 <div id="svar"><div class="stor"></div><div class="vem"></div><div class="ord"><span class="ordrubrik">favoritord</span><span class="ordet"></span></div><div class="mer"></div></div>
 <div id="pin">
   <div class="nr">Dörr</div>
   <div class="block"><input id="pinfalt" inputmode="numeric" autocomplete="off" placeholder="Kod"><button id="pinknapp">Öppna</button><div class="fel" id="pinfel"></div></div>
 </div>
 <canvas id="duk" hidden></canvas>
-<script src="jsqr.js?v=202610171800"></script>
-<script src="app.js?v=202610171800"></script>
+<script src="jsqr.js?v=202610201000"></script>
+<script src="app.js?v=202610201000"></script>
 <script>
 const $ = id => document.getElementById(id);
 const svar = $('svar'), bild = $('bild'), duk = $('duk'), lage = $('lage');
@@ -28,7 +37,7 @@ let pin = '';
 try { pin = localStorage.getItem('pin') || ''; } catch (e) {}
 let upptagen = false, senast = '', senastTid = 0;
 
-function visaAntal(s) { if (s && s.totalt != null) $('antal').textContent = `${s.inne} inne / ${s.totalt} väntade`; }
+function visaAntal(s) { if (s && s.totalt != null) { $('inne').textContent = s.inne; $('antal').textContent = `av ${s.totalt} väntade`; } }
 
 // Grönt: namnet och favoritordet, som vakten säger högt. Skärmen står kvar tills vakten trycker.
 function visaSvar(ja, stor, vem, mer, ord, ordRubrik) {
@@ -76,7 +85,7 @@ function idUr(text) {
 }
 
 function sok() {
-  if (bild.readyState >= 2 && !upptagen && $('pin').style.display !== 'flex') {
+  if (bild.readyState >= 2 && !upptagen && !sokOppen && $('pin').style.display !== 'flex') {
     const skala = Math.min(1, 640 / bild.videoWidth);
     duk.width = bild.videoWidth * skala; duk.height = bild.videoHeight * skala;
     const g = duk.getContext('2d', { willReadFrequently: true });
@@ -124,6 +133,39 @@ async function provaPin() {
 }
 $('pinknapp').addEventListener('click', provaPin);
 $('pinfalt').addEventListener('keydown', e => { if (e.key === 'Enter') provaPin(); });
+
+// Sök på namn: för gäster vars mobil inte fungerar. Ett tryck på namnet släpper in precis som en skanning.
+let sokOppen = false, personer = [];
+const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const visningsnamn = p => p.namn || 'Gäst till ' + p.vard;
+function radText(t) { return el('div', { class: 'tinfo' }, t); }
+async function oppnaSok() {
+  sokOppen = true;
+  $('sok').style.display = 'flex';
+  $('sokfalt').value = '';
+  $('sokrader').replaceChildren(radText('Hämtar gästlistan …'));
+  $('sokfalt').focus();
+  try {
+    const s = await skicka({ a: 'lista', pin });
+    if (!s.ok) throw new Error(s.fel);
+    personer = s.personer.sort((a, b) => visningsnamn(a).localeCompare(visningsnamn(b), 'sv'));
+    visaAntal(s);
+    visaTraffar();
+  } catch (e) { $('sokrader').replaceChildren(radText('Ingen kontakt. Stäng och försök igen.')); }
+}
+function stangSok() { sokOppen = false; $('sok').style.display = 'none'; $('sokfalt').blur(); }
+function visaTraffar() {
+  const q = norm($('sokfalt').value.trim());
+  const traffar = personer.filter(p => !q || norm(p.namn + ' ' + p.vard).includes(q)).slice(0, 50);
+  $('sokrader').replaceChildren(...(traffar.length ? traffar.map(p => {
+    const info = [p.namn && p.vard ? 'gäst till ' + p.vard : '', p.inne ? 'inne ' + p.inne : '', p.svar !== 'ja' ? 'har inte svarat ja' : ''].filter(Boolean).join(' · ');
+    return el('button', { class: 'traff' + (p.inne ? ' inne' : ''), onclick: () => { stangSok(); kontrollera(p.b); } },
+      el('span', { class: 'tnamn' }, visningsnamn(p)), el('span', { class: 'tinfo' }, info));
+  }) : [radText('Ingen med det namnet.')]));
+}
+$('sokknapp').addEventListener('click', oppnaSok);
+$('sokstang').addEventListener('click', stangSok);
+$('sokfalt').addEventListener('input', visaTraffar);
 
 let igang = false;
 function borja() {
