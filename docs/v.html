@@ -16,7 +16,7 @@
 <body class="vakt">
 <video id="bild" playsinline muted></video>
 <div id="ram"></div>
-<div id="topp"><div><span id="inne" class="raknare">–</span><span>insläppta</span></div><span id="antal" class="svag"></span></div>
+<div id="topp"><div><span id="inne" class="raknare">–</span><span>insläppta</span></div></div>
 <div id="botten"><span id="lage" class="svag">Startar kameran …</span><button id="sokknapp">Sök namn</button></div>
 <div id="sok">
   <div class="sokrad"><input id="sokfalt" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Skriv ett namn"><button id="sokstang" class="tom">Stäng</button></div>
@@ -37,7 +37,7 @@ let pin = '';
 try { pin = localStorage.getItem('pin') || ''; } catch (e) {}
 let upptagen = false, senast = '', senastTid = 0;
 
-function visaAntal(s) { if (s && s.totalt != null) { $('inne').textContent = s.inne; $('antal').textContent = `av ${s.totalt} väntade`; } }
+function visaAntal(s) { if (s && s.inne != null) $('inne').textContent = s.inne; }
 
 // Grönt: namnet och favoritordet, som vakten säger högt. Skärmen står kvar tills vakten trycker.
 function visaSvar(ja, stor, vem, mer, ord, ordRubrik) {
