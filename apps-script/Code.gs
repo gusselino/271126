@@ -77,7 +77,9 @@ function smsLankar() {
     if (!kod || !tel) continue;
     const n = Math.max(1, Number(rader[i][K.platser - 1]) || 1);
     const text = '271126. Det här är din länk, den gäller bara dig' + (n > 1 ? ' och ' + (n - 1) + ' till' : '') + ': ' + SAJT + '?' + kod;
-    const adress = 'sms:' + tel + '&body=' + encodeURIComponent(text);
+    // Kalkylarket gör bara webbadresser klickbara, så sms-länken går via sms.html, som öppnar Meddelanden.
+    // Numret och texten ligger efter # och skickas därför aldrig till någon server.
+    const adress = SAJT + 'sms.html#' + encodeURIComponent('sms:' + tel + '&body=' + encodeURIComponent(text));
     s.getRange(i + 1, K.sms).setFormula('=HYPERLINK("' + adress + '";"skicka")');
   }
 }

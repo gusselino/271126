@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>271126 sms</title>
+<style>body{background:#000;color:#e9e9e9;font:700 14px/1.5 "Helvetica Neue",Arial;letter-spacing:.1em;text-transform:uppercase;padding:40px 22px}a{color:#19e36b}</style>
+</head>
+<body>
+<p id="t">Öppnar Meddelanden …</p>
+<script>
+// Kalkylarket kan bara länka till webbadresser, så sms-länken ligger efter # här och öppnas härifrån.
+// Allt efter # stannar i webbläsaren och skickas aldrig till någon server.
+const adress = decodeURIComponent(location.hash.slice(1));
+if (/^sms:\+?[0-9]+&body=/.test(adress)) {
+  location.href = adress;
+  const a = document.createElement('a'); a.href = adress; a.textContent = 'Öppna Meddelanden';
+  document.getElementById('t').replaceChildren('Inget hände? ', a);
+} else {
+  document.getElementById('t').textContent = 'Ogiltig länk.';
+}
+</script>
+</body>
+</html>
