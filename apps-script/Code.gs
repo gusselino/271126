@@ -2,7 +2,7 @@
  * 271126 – baksidan. Ligger som Apps Script i kalkylarket "271126 gästlista".
  *
  * Flikar:
- *   Länkar         A kod | B namn | C platser | D spärrad | E länk | F svar (ja/kanske/nej) | G inne | H senast insläppt  | I svarade | J gäster | K telefon | L sms | M villkor för plus | N favoritord | O insläppta
+ *   Länkar         A kod | B namn | C platser | D spärrad | E länk | F svar (ja/kanske/nej) | G inne | H senast insläppt  | I svarade | J gäster | K telefon | L sms | M villkor för plus | N favoritord | O insläppta | P hemligt meddelande
  *   (villkor: fri text som gästen ser, t.ex. "en tjej")
  *   Inställningar  A1 "PIN" | B1 vaktens kod
  *
@@ -17,7 +17,7 @@
 
 const SAJT = 'https://271126.com/';
 const TECKEN = 'abcdefghjkmnpqrstuvwxyz23456789'; // inga förväxlingsbara tecken
-const K = { kod: 1, namn: 2, platser: 3, sparrad: 4, lank: 5, svar: 6, inne: 7, senast: 8, svarade: 9, gaster: 10, telefon: 11, sms: 12, villkor: 13, ord: 14, inslappta: 15 };
+const K = { kod: 1, namn: 2, platser: 3, sparrad: 4, lank: 5, svar: 6, inne: 7, senast: 8, svarade: 9, gaster: 10, telefon: 11, sms: 12, villkor: 13, ord: 14, inslappta: 15, meddelande: 16 };
 const SVAR = ['ja', 'kanske', 'nej'];
 
 function onOpen() {
@@ -30,7 +30,7 @@ function onOpen() {
 function installera() {
   const ss = SpreadsheetApp.getActive();
   const s = ss.getSheetByName('Länkar') || ss.insertSheet('Länkar');
-  const rubriker = ['kod', 'namn', 'platser', 'spärrad', 'länk', 'svar', 'inne', 'senast insläppt', 'svarade', 'gäster', 'telefon', 'sms', 'villkor för plus', 'favoritord', 'insläppta'];
+  const rubriker = ['kod', 'namn', 'platser', 'spärrad', 'länk', 'svar', 'inne', 'senast insläppt', 'svarade', 'gäster', 'telefon', 'sms', 'villkor för plus', 'favoritord', 'insläppta', 'hemligt meddelande'];
   if (s.getLastRow() === 0) s.appendRow(rubriker);
   rubriker.forEach((r, i) => { if (!s.getRange(1, i + 1).getValue()) s.getRange(1, i + 1).setValue(r); });
   s.setFrozenRows(1);
@@ -91,7 +91,7 @@ function allaLankar() {
     rad: i + 2, kod: String(r[0]), namn: String(r[1]), platser: Math.max(1, Number(r[2]) || 1),
     sparrad: !!r[3], svar: SVAR.indexOf(String(r[5])) >= 0 ? String(r[5]) : '', inne: Number(r[6]) || 0, senast: r[7] ? r[7] : null,
     gaster: String(r[9] || '').split(';').map(x => x.trim()).filter(Boolean),
-    villkor: String(r[12] || '').trim(), ord: String(r[13] || '').trim(), platserInne: lasPlatser(r[14]),
+    villkor: String(r[12] || '').trim(), ord: String(r[13] || '').trim(), platserInne: lasPlatser(r[14]), meddelande: String(r[15] || '').trim(),
   })).filter(l => l.kod).map(l => Object.assign(l, { inne: Object.keys(l.platserInne).length }));
 }
 
@@ -125,7 +125,7 @@ function rakna(alla) {
 function visaLank(kod) {
   const l = lasLank(kod);
   if (!l || l.sparrad) return { ok: false, fel: 'okänd' };
-  return { ok: true, namn: l.namn, platser: l.platser, svar: l.svar, gaster: l.gaster, villkor: l.villkor, ord: l.ord, inslappta: l.platserInne };
+  return { ok: true, namn: l.namn, platser: l.platser, svar: l.svar, gaster: l.gaster, villkor: l.villkor, ord: l.ord, inslappta: l.platserInne, meddelande: l.meddelande };
 }
 
 // Favoritordet: bara bokstäver, högst 14.
