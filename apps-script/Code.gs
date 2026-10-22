@@ -90,10 +90,12 @@ function allaLankar() {
   return blad().getDataRange().getValues().slice(1).map((r, i) => ({
     rad: i + 2, kod: String(r[0]), namn: String(r[1]), platser: Math.max(1, Number(r[2]) || 1),
     sparrad: !!r[3], svar: SVAR.indexOf(String(r[5])) >= 0 ? String(r[5]) : '', inne: Number(r[6]) || 0, senast: r[7] ? r[7] : null,
-    gaster: String(r[9] || '').split(';').map(x => x.trim()).filter(Boolean),
+    gaster: utanTommaSist(String(r[9] || '').split(';').map(x => x.trim())),   // platsen styr: tomt fält = gäst utan namn
     villkor: String(r[12] || '').trim(), ord: String(r[13] || '').trim(), platserInne: lasPlatser(r[14]), meddelande: String(r[15] || '').trim(),
   })).filter(l => l.kod).map(l => Object.assign(l, { inne: Object.keys(l.platserInne).length }));
 }
+
+function utanTommaSist(a) { while (a.length && !a[a.length - 1]) a.pop(); return a; }
 
 // "1 22:41; 3 23:10" -> { 1: '22:41', 3: '23:10' }
 function lasPlatser(text) {
@@ -196,13 +198,14 @@ function lage(pin) {
 
 /** Namnen på dem gästen tar med. Högst antal platser minus ett, förnamn och efternamn. */
 function sparaGaster(kod, gaster) {
-  const lista = (Array.isArray(gaster) ? gaster : []).map(g => String(g || '').replace(/[<>;]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean);
+  // varje gäst behåller sin plats (gäst 2, gäst 3 ...) även om en tidigare plats är tom
+  const lista = utanTommaSist((Array.isArray(gaster) ? gaster : []).map(g => String(g || '').replace(/[<>;]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60)));
   const las = LockService.getScriptLock();
   las.waitLock(20000);
   try {
     const l = lasLank(kod);
     if (!l || l.sparrad) return { ok: false, fel: 'okänd' };
-    const spara = lista.slice(0, l.platser - 1);
+    const spara = utanTommaSist(lista.slice(0, l.platser - 1));
     blad().getRange(l.rad, K.gaster).setValue(spara.join('; '));
     SpreadsheetApp.flush();
     return { ok: true, namn: l.namn, platser: l.platser, svar: l.svar, gaster: spara };

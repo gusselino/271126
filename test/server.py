@@ -62,7 +62,8 @@ def svara(kod, svar, ord=""):
 
 def spara_gaster(kod, gaster):
     lista = [" ".join(str(g or "").replace("<", "").replace(">", "").replace(";", "").split())[:60] for g in (gaster if isinstance(gaster, list) else [])]
-    lista = [g for g in lista if g]
+    while lista and not lista[-1]:
+        lista.pop()
     with LAS:
         l = LANKAR.get(kod)
         if not l or l["sparrad"]:
