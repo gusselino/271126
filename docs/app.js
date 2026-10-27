@@ -7,7 +7,7 @@ const API = ['localhost', '127.0.0.1'].includes(location.hostname) ? '/api' : AP
 const FEST = {
   start: '2026-11-27T22:00:00+01:00',
   datum: 'Fredag 27 november',
-  program: [['22.00', 'Dörrarna öppnar'], ['23.00', 'Dygna'], ['00.00', 'Sonic Butler']],
+  program: [['22.00', 'Dörrarna öppnar'], ['23.30', 'Själen'], ['00.00', 'Dygna'], ['00.30', 'Sonic Butler']],
   plats: 'Stockholm',
   adress: 'Pelikansgränd 5',
   kladsel: 'Kom som dig själv.',

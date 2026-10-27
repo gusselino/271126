@@ -10,7 +10,7 @@ DTSTART:20261127T210000Z
 DTEND:20261128T030000Z
 SUMMARY:271126
 LOCATION:Pelikansgränd 5\, Stockholm
-DESCRIPTION:22.00 dörrarna öppnar\n23.00 Dygna\n00.00 Sonic Butler\n\nBiljetten finns i länken du fick. Kom som dig själv.
+DESCRIPTION:22.00 dörrarna öppnar\n23.30 Själen\n00.00 Dygna\n00.30 Sonic Butler\n\nBiljetten finns i länken du fick. Kom som dig själv.
 BEGIN:VALARM
 TRIGGER:-P1D
 ACTION:DISPLAY
