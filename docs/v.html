@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="271126 dörr">
 <link rel="apple-touch-icon" href="dorr-ikon.png">
 <title>271126 dörr</title>
-<link rel="stylesheet" href="stil.css?v=202611271145">
+<link rel="stylesheet" href="stil.css?v=202611271150">
 </head>
 <body class="vakt">
 <video id="bild" playsinline muted></video>
@@ -28,8 +28,8 @@
   <div class="block"><input id="pinfalt" inputmode="numeric" autocomplete="off" placeholder="Kod"><button id="pinknapp">Öppna</button><div class="fel" id="pinfel"></div></div>
 </div>
 <canvas id="duk" hidden></canvas>
-<script src="jsqr.js?v=202611271145"></script>
-<script src="app.js?v=202611271145"></script>
+<script src="jsqr.js?v=202611271150"></script>
+<script src="app.js?v=202611271150"></script>
 <script>
 const $ = id => document.getElementById(id);
 const svar = $('svar'), bild = $('bild'), duk = $('duk'), lage = $('lage');
@@ -186,7 +186,7 @@ function visaTraffar() {
   const traffar = personer.filter(p => !q || norm(p.namn + ' ' + p.vard).includes(q)).slice(0, 50);
   $('sokrader').replaceChildren(...(traffar.length ? traffar.map(p => {
     const info = [p.namn && p.vard ? 'gäst till ' + p.vard : '', p.inne ? 'inne ' + p.inne : '', p.svar !== 'ja' ? 'har inte svarat ja' : ''].filter(Boolean).join(' · ');
-    return el('button', { class: 'traff' + (p.inne ? ' inne' : ''), onclick: () => { stangSok(); kontrollera(p.b); } },
+    return el('button', { class: 'traff' + (p.inne ? ' inne' : ''), onclick: () => { if (!confirm('Släpp in ' + visningsnamn(p) + '?')) return; stangSok(); kontrollera(p.b); } },
       el('span', { class: 'tnamn' }, visningsnamn(p)), el('span', { class: 'tinfo' }, info));
   }) : [radText('Ingen med det namnet.')]));
 }
