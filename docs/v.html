@@ -11,12 +11,12 @@
 <meta name="apple-mobile-web-app-title" content="271126 dörr">
 <link rel="apple-touch-icon" href="dorr-ikon.png">
 <title>271126 dörr</title>
-<link rel="stylesheet" href="stil.css?v=202611251750">
+<link rel="stylesheet" href="stil.css?v=202611271200">
 </head>
 <body class="vakt">
 <video id="bild" playsinline muted></video>
 <div id="ram"></div>
-<div id="topp"><div><span id="inne" class="raknare">–</span><span>insläppta</span></div></div>
+<div id="topp"><div class="nu"><span id="inneNu" class="raknare">–</span><span><span id="nurubrik">inne nu</span><br><span class="svag" id="skannade">– skannade</span></span></div><div class="knappar"><button id="ut" class="tom">− ut</button><button id="in" class="tom">+ in</button></div></div>
 <div id="botten"><span id="lage" class="svag">Startar kameran …</span><button id="sokknapp">Sök namn</button></div>
 <div id="sok">
   <div class="sokrad"><input id="sokfalt" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Skriv ett namn"><button id="sokstang" class="tom">Stäng</button></div>
@@ -28,8 +28,8 @@
   <div class="block"><input id="pinfalt" inputmode="numeric" autocomplete="off" placeholder="Kod"><button id="pinknapp">Öppna</button><div class="fel" id="pinfel"></div></div>
 </div>
 <canvas id="duk" hidden></canvas>
-<script src="jsqr.js?v=202611251750"></script>
-<script src="app.js?v=202611251750"></script>
+<script src="jsqr.js?v=202611271200"></script>
+<script src="app.js?v=202611271200"></script>
 <script>
 const $ = id => document.getElementById(id);
 const svar = $('svar'), bild = $('bild'), duk = $('duk'), lage = $('lage');
@@ -37,7 +37,27 @@ let pin = '';
 try { pin = localStorage.getItem('pin') || ''; } catch (e) {}
 let upptagen = false, senast = '', senastTid = 0;
 
-function visaAntal(s) { if (s && s.inne != null) $('inne').textContent = s.inne; }
+// Inne nu = skannade biljetter + de vakten släppt in för hand − de som gått. Räknas bara i den här mobilen.
+const MAX = 100, NYCKEL = 'dorr-271126';
+let skannade = null, hand = { in: 0, ut: 0 };
+try { Object.assign(hand, JSON.parse(localStorage.getItem(NYCKEL) || '{}')); } catch (e) {}
+function visaNu() {
+  if (skannade == null) return;
+  const nu = Math.max(0, skannade + hand.in - hand.ut);
+  $('inneNu').textContent = nu;
+  $('skannade').textContent = skannade + ' skannade' + (hand.in ? ' · ' + hand.in + ' utan biljett' : '') + (hand.ut ? ' · ' + hand.ut + ' ut' : '');
+  $('topp').classList.toggle('fullt', nu >= MAX);
+  $('nurubrik').textContent = nu >= MAX ? 'FULLT' : 'inne nu';
+}
+function andra(typ) {
+  hand[typ]++;
+  try { localStorage.setItem(NYCKEL, JSON.stringify(hand)); } catch (e) {}
+  if (navigator.vibrate) navigator.vibrate(30);
+  visaNu();
+}
+$('in').addEventListener('click', () => andra('in'));
+$('ut').addEventListener('click', () => andra('ut'));
+function visaAntal(s) { if (s && s.inne != null) { skannade = s.inne; visaNu(); } }
 
 // Grönt: namnet och favoritordet, som vakten säger högt. Skärmen står kvar tills vakten trycker.
 function visaSvar(ja, stor, vem, mer, ord, ordRubrik) {
