@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="271126 dörr">
 <link rel="apple-touch-icon" href="dorr-ikon.png">
 <title>271126 dörr</title>
-<link rel="stylesheet" href="stil.css?v=202611271200">
+<link rel="stylesheet" href="stil.css?v=202611271145">
 </head>
 <body class="vakt">
 <video id="bild" playsinline muted></video>
@@ -28,8 +28,8 @@
   <div class="block"><input id="pinfalt" inputmode="numeric" autocomplete="off" placeholder="Kod"><button id="pinknapp">Öppna</button><div class="fel" id="pinfel"></div></div>
 </div>
 <canvas id="duk" hidden></canvas>
-<script src="jsqr.js?v=202611271200"></script>
-<script src="app.js?v=202611271200"></script>
+<script src="jsqr.js?v=202611271145"></script>
+<script src="app.js?v=202611271145"></script>
 <script>
 const $ = id => document.getElementById(id);
 const svar = $('svar'), bild = $('bild'), duk = $('duk'), lage = $('lage');
@@ -57,6 +57,13 @@ function andra(typ) {
 }
 $('in').addEventListener('click', () => andra('in'));
 $('ut').addEventListener('click', () => andra('ut'));
+// Tryck på talet för att nollställa ut och in (t.ex. efter test). Skannade ligger kvar i arket.
+$('inneNu').addEventListener('click', () => {
+  if (!confirm('Nollställa ut och in? Skannade biljetter påverkas inte.')) return;
+  hand = { in: 0, ut: 0 };
+  try { localStorage.removeItem(NYCKEL); } catch (e) {}
+  visaNu();
+});
 function visaAntal(s) { if (s && s.inne != null) { skannade = s.inne; visaNu(); } }
 
 // Grönt: namnet och favoritordet, som vakten säger högt. Skärmen står kvar tills vakten trycker.
